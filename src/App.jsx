@@ -179,7 +179,7 @@ function SectionLabel({ children }) {
 
 /* ─── MAIN ─── */
 export default function App() {
-  const [formSent, setFormSent] = useState(false);
+  const [formSent, setFormSent] = useState(false); const [formLoading, setFormLoading] = useState(false); const handleSubmit = async () => { setFormLoading(true); try { await fetch("https://formspree.io/f/mbdqnyey", {method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({message:"Nuovo lead Marcel"})}); } catch(e) {} setFormLoading(false); setFormSent(true); };
   const [mobileMenu, setMobileMenu] = useState(false);
 
   return (
