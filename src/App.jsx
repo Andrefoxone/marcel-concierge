@@ -541,7 +541,7 @@ export default function App() {
                 <option>50-100</option>
                 <option>Più di 100</option>
               </select>
-              <button onClick={() => setFormSent(true)} style={{
+              <button onClick={async () => { const form = document.querySelector('form'); await fetch('https://formspree.io/f/xAbCdEfG', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name: document.querySelectorAll('input')[0].value, hotel: document.querySelectorAll('input')[1].value, email: document.querySelectorAll('input')[2].value, phone: document.querySelectorAll('input')[3].value})}); setFormSent(true); }} style={{
                 padding: "16px 32px", borderRadius: 10, border: "none", cursor: "pointer",
                 background: "linear-gradient(135deg, #d4af78, #c49a5c)", color: "#0f0f0e",
                 fontSize: 16, fontWeight: 800, fontFamily: "'DM Sans',sans-serif",
