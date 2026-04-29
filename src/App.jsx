@@ -1,424 +1,620 @@
 import { useState, useEffect, useRef } from "react";
 
-const HEARTBEAT_KEYFRAMES = `
-@keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 0.6; }
-  14% { transform: scale(1.15); opacity: 1; }
-  28% { transform: scale(1); opacity: 0.6; }
-  42% { transform: scale(1.12); opacity: 0.9; }
-  56% { transform: scale(1); opacity: 0.6; }
-}
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes lineGrow {
-  from { width: 0; }
-  to { width: 60px; }
-}
-@keyframes gentlePulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.6; }
-}
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-`;
+/* ─── DEMO CHAT DATA ─── */
+const DEMO_CONVERSATIONS = {
+  checkin: [
+    { role: "guest", text: "Buonasera, a che ora posso fare il check-in domani?" },
+    { role: "marcel", text: "Buonasera! Il check-in è disponibile dalle 14:00 alle 22:00. Se desidera un orario anticipato, posso verificare la disponibilità per un early check-in alle 12:00 con un piccolo supplemento di €25. Vuole che lo prenoti?" },
+    { role: "guest", text: "Sì, alle 12 sarebbe perfetto" },
+    { role: "marcel", text: "Perfetto! Ho prenotato il suo early check-in per domani alle 12:00. Troverà la conferma via email. Posso aiutarla con altro? Un transfer dall'aeroporto, forse?" },
+  ],
+  ristorante: [
+    { role: "guest", text: "Vorrei prenotare un ristorante romantico per stasera, siamo in due" },
+    { role: "marcel", text: "Con piacere! Per una cena romantica le consiglio tre opzioni vicine all'hotel:\n\n🥇 Terrazza Gallia — rooftop con vista Duomo, cucina stellata, 5 min a piedi\n🥈 Seta by Mandarin — elegante, menu degustazione, 8 min\n🥉 Langosteria — pesce eccellente, atmosfera intima, 10 min\n\nVuole che prenoti un tavolo? Per che ora?" },
+    { role: "guest", text: "Terrazza Gallia alle 20:30" },
+    { role: "marcel", text: "Prenotato! Tavolo per 2 alla Terrazza Gallia, ore 20:30. Ho indicato che siete ospiti dell'hotel — avrete un cocktail di benvenuto offerto. Buona cena! 🥂" },
+  ],
+  spa: [
+    { role: "guest", text: "La spa è aperta oggi? Vorrei un massaggio" },
+    { role: "marcel", text: "Sì, la nostra spa è aperta oggi dalle 10:00 alle 21:00. Ecco i trattamenti disponibili per oggi:\n\n💆 Massaggio rilassante 50min — €95\n💆 Deep tissue 50min — €110\n🌿 Ritual corpo completo 80min — €145\n\nAbbiamo disponibilità alle 15:00, 16:30 e 18:00. Quale preferisce?" },
+    { role: "guest", text: "Rilassante alle 16:30" },
+    { role: "marcel", text: "Perfetto! Massaggio rilassante prenotato per le 16:30. Le consiglio di arrivare 15 minuti prima per usufruire della sauna e dell'area relax. L'addebito verrà aggiunto al conto camera. Buon relax! 🧖" },
+  ],
+};
 
-const FONTS_LINK = "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500&display=swap";
+const STATS = [
+  { value: "94%", label: "Risposte automatiche", sub: "senza intervento umano" },
+  { value: "24/7", label: "Sempre attivo", sub: "notti, weekend, festivi" },
+  { value: "< 3s", label: "Tempo di risposta", sub: "media per messaggio" },
+  { value: "+35%", label: "Upselling", sub: "servizi aggiuntivi venduti" },
+];
 
-// API endpoint — in production use a serverless function as proxy
-const API_URL = "/api/generate";
+const FEATURES = [
+  { icon: "💬", title: "Conversazioni naturali", desc: "Marcel parla come un vero concierge. Capisce il contesto, ricorda le preferenze, e risponde in italiano, inglese, francese, tedesco e spagnolo." },
+  { icon: "🏨", title: "Personalizzato al 100%", desc: "Configurato con i servizi, le tariffe, i ristoranti partner e le attrazioni del vostro hotel. Ogni risposta riflette la vostra identità." },
+  { icon: "📱", title: "Multi-canale", desc: "Funziona sul vostro sito web, via WhatsApp e nella web app per gli ospiti. Un unico punto di contatto, ovunque." },
+  { icon: "📊", title: "Dashboard analytics", desc: "Sapete esattamente cosa chiedono i vostri ospiti, quali servizi sono più richiesti, e dove c'è opportunità di revenue." },
+  { icon: "🔔", title: "Escalation intelligente", desc: "Quando serve l'intervento umano, Marcel avvisa il vostro staff con tutti i dettagli del contesto. Zero informazioni perse." },
+  { icon: "🔒", title: "GDPR compliant", desc: "Dati ospiti protetti, server in UE, nessun dato condiviso con terzi. Piena conformità normativa." },
+];
 
-function HeartIcon({ size = 20, style = {} }) {
+const TESTIMONIALS = [
+  { name: "Francesca R.", role: "Direttrice, Boutique Hotel Brera", text: "Da quando abbiamo Marcel, il nostro front desk gestisce il 40% in meno di telefonate. Gli ospiti adorano avere risposte immediate, specialmente di notte.", stars: 5 },
+  { name: "Marco B.", role: "GM, Palazzo Naviglio", text: "L'upselling è stato una sorpresa. Marcel propone la colazione in camera, il late checkout, la spa — e gli ospiti accettano perché il suggerimento arriva al momento giusto.", stars: 5 },
+  { name: "Giulia T.", role: "Owner, Casa Tortona Suites", text: "Gestisco 12 camere praticamente da sola. Marcel è come avere un receptionist in più, ma che non dorme mai e non va in ferie.", stars: 5 },
+];
+
+const PRICING = [
+  {
+    name: "Essenziale",
+    setup: "490",
+    monthly: "89",
+    desc: "Per strutture fino a 20 camere",
+    features: ["Chatbot sul vostro sito web", "Fino a 500 conversazioni/mese", "Configurazione personalizzata", "Supporto italiano", "Dashboard base"],
+    cta: "Inizia ora",
+    popular: false,
+  },
+  {
+    name: "Business",
+    setup: "790",
+    monthly: "149",
+    desc: "Per hotel boutique 20-50 camere",
+    features: ["Tutto di Essenziale +", "WhatsApp Business integrato", "Conversazioni illimitate", "Upselling automatizzato", "Dashboard analytics completa", "Aggiornamenti mensili inclusi"],
+    cta: "Scegli Business",
+    popular: true,
+  },
+  {
+    name: "Premium",
+    setup: "Su misura",
+    monthly: "249",
+    desc: "Per hotel 50+ camere e gruppi",
+    features: ["Tutto di Business +", "Integrazione PMS", "Multi-lingua avanzato (8 lingue)", "Report settimanali personalizzati", "Account manager dedicato", "SLA risposta 2h"],
+    cta: "Contattaci",
+    popular: false,
+  },
+];
+
+/* ─── COMPONENTS ─── */
+
+function ChatDemo() {
+  const [activeConv, setActiveConv] = useState("checkin");
+  const [visibleMsgs, setVisibleMsgs] = useState(0);
+  const [isTyping, setIsTyping] = useState(false);
+  const chatRef = useRef(null);
+  const msgs = DEMO_CONVERSATIONS[activeConv];
+
+  useEffect(() => {
+    setVisibleMsgs(0);
+    setIsTyping(false);
+    let timeouts = [];
+    msgs.forEach((msg, i) => {
+      if (msg.role === "marcel" && i > 0) {
+        timeouts.push(setTimeout(() => setIsTyping(true), i * 1800 - 600));
+      }
+      timeouts.push(setTimeout(() => {
+        setIsTyping(false);
+        setVisibleMsgs(i + 1);
+      }, i * 1800));
+    });
+    return () => timeouts.forEach(clearTimeout);
+  }, [activeConv]);
+
+  useEffect(() => {
+    if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
+  }, [visibleMsgs, isTyping]);
+
+  const convTabs = [
+    { id: "checkin", label: "Check-in", icon: "🔑" },
+    { id: "ristorante", label: "Ristorante", icon: "🍽" },
+    { id: "spa", label: "Spa", icon: "💆" },
+  ];
+
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" style={style}>
-      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-    </svg>
+    <div style={{ background: "#1a1a1a", borderRadius: 20, overflow: "hidden", border: "1px solid rgba(212,175,120,0.15)", maxWidth: 440, width: "100%", boxShadow: "0 24px 80px rgba(0,0,0,0.5)" }}>
+      {/* Chat Header */}
+      <div style={{ padding: "16px 20px", background: "linear-gradient(135deg, #1e1e1e, #252525)", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg, #d4af78, #b8924a)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>M</div>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#f0e6d6", fontFamily: "'Cormorant Garamond',Georgia,serif" }}>Marcel</div>
+          <div style={{ fontSize: 11, color: "#7a7268", display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4caf50", display: "inline-block" }}></span> Online — Boutique Hotel Demo
+          </div>
+        </div>
+      </div>
+
+      {/* Scenario Tabs */}
+      <div style={{ display: "flex", gap: 0, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        {convTabs.map(t => (
+          <button key={t.id} onClick={() => setActiveConv(t.id)} style={{
+            flex: 1, padding: "10px 8px", background: activeConv === t.id ? "rgba(212,175,120,0.1)" : "transparent",
+            border: "none", borderBottom: activeConv === t.id ? "2px solid #c9a96e" : "2px solid transparent",
+            color: activeConv === t.id ? "#c9a96e" : "#6a6a5a", fontSize: 11, fontWeight: 700, cursor: "pointer",
+            fontFamily: "'DM Sans',sans-serif", transition: "all .2s"
+          }}>{t.icon} {t.label}</button>
+        ))}
+      </div>
+
+      {/* Messages */}
+      <div ref={chatRef} style={{ padding: "16px", height: 320, overflowY: "auto", display: "flex", flexDirection: "column", gap: 10 }}>
+        {msgs.slice(0, visibleMsgs).map((msg, i) => (
+          <div key={`${activeConv}-${i}`} style={{
+            alignSelf: msg.role === "guest" ? "flex-end" : "flex-start",
+            maxWidth: "85%", animation: "msgIn .35s ease",
+          }}>
+            <div style={{
+              padding: "10px 14px", borderRadius: msg.role === "guest" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+              background: msg.role === "guest" ? "linear-gradient(135deg, #d4af78, #b8924a)" : "rgba(255,255,255,0.06)",
+              color: msg.role === "guest" ? "#1a1a1a" : "#e0d8c8",
+              fontSize: 13, lineHeight: 1.55, fontFamily: "'DM Sans',sans-serif", whiteSpace: "pre-line"
+            }}>{msg.text}</div>
+          </div>
+        ))}
+        {isTyping && (
+          <div style={{ alignSelf: "flex-start", animation: "msgIn .2s ease" }}>
+            <div style={{ padding: "10px 18px", borderRadius: "16px 16px 16px 4px", background: "rgba(255,255,255,0.06)", display: "flex", gap: 4 }}>
+              {[0,1,2].map(i => <span key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: "#c9a96e", animation: `dotPulse .8s ease ${i * 0.15}s infinite` }}></span>)}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Input Bar */}
+      <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(255,255,255,0.06)", background: "#1e1e1e" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.05)", borderRadius: 12, padding: "10px 14px" }}>
+          <span style={{ flex: 1, fontSize: 13, color: "#5a5a4a" }}>Scrivi un messaggio...</span>
+          <span style={{ fontSize: 18, opacity: 0.4 }}>↗</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
+function Section({ children, id, style = {} }) {
+  return <section id={id} style={{ padding: "80px 24px", maxWidth: 1100, margin: "0 auto", ...style }}>{children}</section>;
+}
+
+function SectionLabel({ children }) {
+  return <div style={{ display:"flex", alignItems:"center", gap:12, justifyContent:"center", marginBottom:16 }}>
+    <div style={{width:32, height:1, background:"rgba(201,169,110,0.4)"}}></div>
+    <span style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: 4, color: "#c9a96e", fontFamily: "'DM Sans',sans-serif" }}>{children}</span>
+    <div style={{width:32, height:1, background:"rgba(201,169,110,0.4)"}}></div>
+  </div>;
+}
+
+/* ─── MAIN ─── */
 export default function App() {
-  const [view, setView] = useState("home");
-  const [userText, setUserText] = useState("");
-  const [generatedStory, setGeneratedStory] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [wallStories, setWallStories] = useState([]);
-  const [revealedChars, setRevealedChars] = useState(0);
-  const [error, setError] = useState("");
+  const [formSent, setFormSent] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [mobileMenu, setMobileMenu] = useState(false);
+  const [fields, setFields] = useState({ name:"", hotel:"", email:"", phone:"", rooms:"" });
 
-  useEffect(() => {
-    const saved = localStorage.getItem("tachicardia-wall");
-    if (saved) setWallStories(JSON.parse(saved));
-  }, []);
-
-  useEffect(() => {
-    if (view === "result" && generatedStory && revealedChars < generatedStory.length) {
-      const speed = 25 + Math.random() * 20;
-      const timer = setTimeout(() => setRevealedChars(prev => prev + 1), speed);
-      return () => clearTimeout(timer);
-    }
-  }, [view, generatedStory, revealedChars]);
-
-  function saveStory(original, generated) {
-    const newStory = {
-      id: Date.now(),
-      original: original.substring(0, 100),
-      generated,
-      date: new Date().toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })
-    };
-    const updated = [newStory, ...wallStories].slice(0, 50);
-    setWallStories(updated);
-    localStorage.setItem("tachicardia-wall", JSON.stringify(updated));
-  }
-
-  async function generateStory() {
-    if (!userText.trim() || userText.trim().length < 10) {
-      setError("Scrivi almeno qualche parola in più. Il cuore ha bisogno di spazio.");
-      return;
-    }
-    setError("");
-    setIsGenerating(true);
-    setRevealedChars(0);
-
+  const handleSubmit = async () => {
+    if (!fields.name || !fields.email || !fields.hotel) return;
+    setFormLoading(true);
     try {
-      const res = await fetch(API_URL, {
+      await fetch("https://formspree.io/f/mbdqnyey", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userText })
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(fields)
       });
-
-      const data = await res.json();
-      
-      if (data.story) {
-        setGeneratedStory(data.story);
-        saveStory(userText, data.story);
-        setView("result");
-      } else {
-        setError(data.error || "Qualcosa è andato storto. Riprova.");
-      }
-    } catch (err) {
-      setError("Connessione interrotta. Il cuore a volte salta un battito.");
-    }
-    setIsGenerating(false);
-  }
-
-  const navStyle = {
-    display: "flex", justifyContent: "space-between", alignItems: "center",
-    padding: "24px 32px",
-    borderBottom: "1px solid rgba(232,224,214,0.06)"
-  };
-
-  const btnBase = {
-    background: "transparent",
-    border: "1px solid rgba(184,64,64,0.5)",
-    color: "#e8e0d6",
-    padding: "14px 40px",
-    fontFamily: "'Cormorant Garamond', serif",
-    fontSize: "16px",
-    fontWeight: 500,
-    letterSpacing: "0.12em",
-    textTransform: "uppercase",
-    cursor: "pointer",
-    transition: "all 0.3s",
-    borderRadius: "0"
+    } catch(e) {}
+    setFormLoading(false);
+    setFormSent(true);
   };
 
   return (
-    <>
-      <style>{HEARTBEAT_KEYFRAMES}</style>
-      <link href={FONTS_LINK} rel="stylesheet" />
-      <div style={{
-        minHeight: "100vh",
-        background: "#0a0a0a",
-        color: "#e8e0d6",
-        fontFamily: "'DM Sans', sans-serif",
-        position: "relative",
-        overflow: "hidden"
+    <div style={{ fontFamily: "'DM Sans','Segoe UI',sans-serif", background: "#0c0b09", color: "#e8e0d0", minHeight: "100vh", overflowX: "hidden" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
+        *{box-sizing:border-box;margin:0;padding:0}
+        html{scroll-behavior:smooth}
+        ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(212,175,120,0.15);border-radius:2px}
+        @keyframes fi{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes msgIn{from{opacity:0;transform:translateY(8px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+        @keyframes dotPulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+        @keyframes glow{0%,100%{opacity:0.4}50%{opacity:0.7}}
+        a{color:#c9a96e;text-decoration:none}
+        .btn-gold{transition:all .25s ease!important}
+        .btn-gold:hover{transform:translateY(-2px)!important;box-shadow:0 8px 32px rgba(212,175,120,0.4)!important}
+        .btn-outline:hover{background:rgba(212,175,120,0.06)!important;border-color:rgba(212,175,120,0.5)!important}
+        .feature-card:hover{border-color:rgba(212,175,120,0.2)!important;transform:translateY(-4px)!important;background:rgba(212,175,120,0.03)!important}
+        .feature-card{transition:all .3s ease!important}
+        .pricing-card:hover{transform:translateY(-4px)}
+        .pricing-card{transition:transform .3s ease}
+      `}</style>
+
+      {/* ─── NAV ─── */}
+      <nav style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
+        padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between",
+        background: "rgba(12,11,9,0.92)", backdropFilter: "blur(24px) saturate(180%)", borderBottom: "1px solid rgba(212,175,120,0.06)"
       }}>
-        {/* Grain overlay */}
-        <div style={{
-          position: "fixed", inset: 0, opacity: 0.04, zIndex: 0,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-          backgroundSize: "128px 128px"
-        }} />
-
-        {/* Red glow */}
-        <div style={{
-          position: "fixed", top: "30%", left: "50%",
-          width: "600px", height: "600px",
-          transform: "translate(-50%, -50%)", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(180,40,40,0.08) 0%, transparent 70%)",
-          animation: "gentlePulse 3s ease-in-out infinite", zIndex: 0
-        }} />
-
-        <div style={{ position: "relative", zIndex: 1 }}>
-
-          {/* NAV */}
-          <nav style={navStyle}>
-            <div onClick={() => { setView("home"); setUserText(""); setGeneratedStory(""); setError(""); }}
-              style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "10px" }}>
-              <HeartIcon size={16} style={{ color: "#b84040", animation: "pulse 1.5s ease-in-out infinite" }} />
-              <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "18px", fontWeight: 500, letterSpacing: "0.05em" }}>
-                La mia Tachicardia
-              </span>
-            </div>
-            <div style={{ display: "flex", gap: "24px", fontSize: "13px", fontWeight: 300, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-              <span onClick={() => setView("write")} style={{ cursor: "pointer", opacity: view === "write" ? 1 : 0.5, transition: "opacity 0.3s" }}>Scrivi</span>
-              <span onClick={() => setView("wall")} style={{ cursor: "pointer", opacity: view === "wall" ? 1 : 0.5, transition: "opacity 0.3s" }}>Muro</span>
-            </div>
-          </nav>
-
-          {/* HOME */}
-          {view === "home" && (
-            <div style={{
-              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-              minHeight: "calc(100vh - 80px)", padding: "40px 24px", textAlign: "center",
-              animation: "fadeInUp 0.8s ease-out"
-            }}>
-              <div style={{
-                width: "80px", height: "80px", borderRadius: "50%",
-                border: "1px solid rgba(184,64,64,0.3)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                marginBottom: "40px", animation: "pulse 1.5s ease-in-out infinite"
-              }}>
-                <HeartIcon size={32} style={{ color: "#b84040" }} />
-              </div>
-
-              <h1 style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "clamp(36px, 7vw, 64px)", fontWeight: 300,
-                lineHeight: 1.1, marginBottom: "12px", fontStyle: "italic"
-              }}>La mia Tachicardia</h1>
-
-              <div style={{ width: "0", height: "1px", background: "#b84040", animation: "lineGrow 1s ease-out 0.5s forwards", marginBottom: "32px" }} />
-
-              <p style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "clamp(18px, 3vw, 22px)", fontWeight: 300,
-                lineHeight: 1.7, maxWidth: "520px", opacity: 0.7, marginBottom: "16px"
-              }}>
-                Racconta il tuo momento di tachicardia.<br/>
-                Quello in cui il cuore andava più veloce del pensiero.
-              </p>
-              <p style={{ fontSize: "14px", fontWeight: 300, opacity: 0.4, maxWidth: "420px", lineHeight: 1.6, marginBottom: "48px" }}>
-                Lo trasformeremo in un micro-racconto,<br/>nello stile del libro di Andrea Fino.
-              </p>
-
-              <button onClick={() => setView("write")} style={btnBase}>Inizia a scrivere</button>
-
-              <div style={{ position: "absolute", bottom: "32px", fontSize: "12px", fontWeight: 300, opacity: 0.3, letterSpacing: "0.05em" }}>
-                Ispirato al libro{" "}
-                <a href="https://amzn.eu/d/0bqAXEFI" target="_blank" rel="noopener noreferrer"
-                  style={{ color: "#b84040", textDecoration: "none", borderBottom: "1px solid rgba(184,64,64,0.3)" }}>
-                  Tachicardia
-                </a>{" "}di Andrea Fino
-              </div>
-            </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #d4af78, #b8924a)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 16, fontWeight: 800, color: "#0f0f0e"
+          }}>M</div>
+          <span style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 18, fontWeight: 700, color: "#f0e6d6" }}>Marcel</span>
+        </div>
+        <div style={{ display: "flex", gap: 28, alignItems: "center" }}>
+          {[["Come funziona","#come-funziona"],["Demo","#demo"],["Prezzi","#prezzi"],["Contatti","#contatti"]].map(([l,h]) =>
+            <a key={l} href={h} style={{ fontSize: 13, color: "#8a8278", fontWeight: 600, textDecoration: "none", transition: "color .2s" }}
+              onMouseEnter={e=>e.target.style.color="#c9a96e"} onMouseLeave={e=>e.target.style.color="#8a8a7a"}>{l}</a>
           )}
+          <a href="#contatti" style={{
+            fontSize: 12, fontWeight: 700, padding: "8px 20px", borderRadius: 8,
+            background: "linear-gradient(135deg, #d4af78, #b8924a)", color: "#0f0f0e",
+            textDecoration: "none", transition: "transform .2s"
+          }} className="btn-gold">Demo gratuita</a>
+        </div>
+      </nav>
 
-          {/* WRITE */}
-          {view === "write" && (
-            <div style={{
-              display: "flex", flexDirection: "column", alignItems: "center",
-              padding: "60px 24px", minHeight: "calc(100vh - 80px)",
-              animation: "fadeInUp 0.6s ease-out"
+      {/* ─── HERO ─── */}
+      <div style={{
+        minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "100px 24px 60px", position: "relative",
+        background: "radial-gradient(ellipse at 20% 50%, rgba(212,175,120,0.07) 0%, transparent 55%), radial-gradient(ellipse at 80% 20%, rgba(180,140,90,0.04) 0%, transparent 45%), radial-gradient(ellipse at 50% 100%, rgba(212,175,120,0.03) 0%, transparent 50%)"
+      }}>
+        {/* Subtle grain overlay */}
+        <div style={{ position: "absolute", inset: 0, opacity: 0.03, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")", backgroundSize: "128px" }} />
+
+        <div style={{ maxWidth: 1100, width: "100%", display: "flex", alignItems: "center", gap: 60, flexWrap: "wrap", justifyContent: "center", position: "relative", zIndex: 1 }}>
+          {/* Left - Copy */}
+          <div style={{ flex: "1 1 480px", minWidth: 320, animation: "fi .8s ease" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 3, color: "#c9a96e", marginBottom: 20 }}>
+              AI Concierge per Hotel Boutique
+            </div>
+            <h1 style={{
+              fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: "clamp(44px, 5.5vw, 68px)",
+              fontWeight: 600, lineHeight: 1.05, color: "#f7f0e6", marginBottom: 28, letterSpacing: -1.5
             }}>
-              <h2 style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "clamp(28px, 5vw, 40px)", fontWeight: 300,
-                fontStyle: "italic", marginBottom: "8px"
-              }}>Il tuo battito</h2>
-              <p style={{ fontSize: "14px", fontWeight: 300, opacity: 0.4, marginBottom: "40px", textAlign: "center", lineHeight: 1.6 }}>
-                Un ricordo. Una paura. Un'accelerazione. Scrivi quello che senti.
-              </p>
-
-              <div style={{ width: "100%", maxWidth: "560px" }}>
-                <textarea
-                  value={userText}
-                  onChange={e => { setUserText(e.target.value); setError(""); }}
-                  placeholder="Quella volta che..."
-                  style={{
-                    width: "100%", minHeight: "200px",
-                    background: "rgba(232,224,214,0.03)",
-                    border: "1px solid rgba(232,224,214,0.1)",
-                    color: "#e8e0d6",
-                    fontFamily: "'Cormorant Garamond', serif",
-                    fontSize: "18px", fontWeight: 300, lineHeight: 1.8,
-                    padding: "24px", resize: "vertical", outline: "none",
-                    transition: "border-color 0.3s", boxSizing: "border-box"
-                  }}
-                  onFocus={e => e.target.style.borderColor = "rgba(184,64,64,0.4)"}
-                  onBlur={e => e.target.style.borderColor = "rgba(232,224,214,0.1)"}
-                />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px" }}>
-                  <span style={{ fontSize: "12px", opacity: 0.3 }}>{userText.length} caratteri</span>
-                  {error && <span style={{ fontSize: "13px", color: "#b84040", fontStyle: "italic" }}>{error}</span>}
+              Il vostro concierge<br/>
+              <span style={{ color: "#c9a96e" }}>che non dorme mai.</span>
+            </h1>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "#9a9080", marginBottom: 32, maxWidth: 520 }}>
+              Marcel accoglie i vostri ospiti 24 ore su 24, risponde alle loro domande, 
+              prenota ristoranti e servizi, e genera revenue extra — tutto in modo 
+              automatico e con la voce del vostro hotel.
+            </p>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 40 }}>
+              <a href="#contatti" style={{
+                padding: "15px 36px", borderRadius: 50, fontWeight: 600, fontSize: 14, letterSpacing: 0.5,
+                background: "linear-gradient(135deg, #c9a96e, #b8924a)", color: "#0c0b09",
+                textDecoration: "none", boxShadow: "0 4px 28px rgba(201,169,110,0.3)"
+              }} className="btn-gold">Richiedi demo gratuita</a>
+              <a href="#demo" className="btn-outline" style={{
+                padding: "15px 36px", borderRadius: 50, fontWeight: 600, fontSize: 14, letterSpacing: 0.5,
+                border: "1px solid rgba(201,169,110,0.35)", color: "#c9a96e",
+                textDecoration: "none"
+              }}>Guarda come funziona ↓</a>
+            </div>
+            <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+              {[["Nessun codice richiesto","🚀"],["Setup in 48 ore","⚡"],["ROI dal primo mese","📈"]].map(([t,i]) =>
+                <div key={t} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#7a7268" }}>
+                  <span style={{ fontSize: 16 }}>{i}</span>{t}
                 </div>
-
-                <button onClick={generateStory} disabled={isGenerating}
-                  style={{
-                    ...btnBase, width: "100%", marginTop: "24px",
-                    background: "rgba(184,64,64,0.15)",
-                    cursor: isGenerating ? "wait" : "pointer"
-                  }}>
-                  {isGenerating ? (
-                    <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
-                      <HeartIcon size={16} style={{ animation: "pulse 0.8s ease-in-out infinite" }} />
-                      Il cuore sta scrivendo...
-                    </span>
-                  ) : "Trasforma in racconto"}
-                </button>
-              </div>
+              )}
             </div>
-          )}
+          </div>
 
-          {/* RESULT */}
-          {view === "result" && (
-            <div style={{
-              display: "flex", flexDirection: "column", alignItems: "center",
-              padding: "60px 24px", minHeight: "calc(100vh - 80px)",
-              animation: "fadeInUp 0.6s ease-out"
+          {/* Right - Chat Demo */}
+          <div style={{ flex: "0 1 440px", animation: "fi .8s ease .2s both" }}>
+            <ChatDemo />
+          </div>
+        </div>
+      </div>
+
+      {/* ─── STATS BAR ─── */}
+      <div style={{ borderTop: "1px solid rgba(212,175,120,0.08)", borderBottom: "1px solid rgba(212,175,120,0.08)", background: "rgba(255,255,255,0.012)" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", justifyContent: "space-around", flexWrap: "wrap", padding: "40px 24px" }}>
+          {STATS.map((s, i) => (
+            <div key={i} style={{ textAlign: "center", padding: "12px 24px", minWidth: 140 }}>
+              <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 44, fontWeight: 700, color: "#c9a96e", letterSpacing: -1 }}>{s.value}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#e8e0d0", marginTop: 4 }}>{s.label}</div>
+              <div style={{ fontSize: 11, color: "#6a6a5a" }}>{s.sub}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── IL PROBLEMA ─── */}
+      <Section>
+        <div style={{ maxWidth: 680, margin: "0 auto", textAlign: "center" }}>
+          <SectionLabel>Il problema</SectionLabel>
+          <h2 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 38, fontWeight: 600, lineHeight: 1.25, color: "#f5ede0", letterSpacing: -0.5, marginBottom: 24 }}>
+            I vostri ospiti hanno domande.<br/>A qualsiasi ora.
+          </h2>
+          <p style={{ fontSize: 16, lineHeight: 1.8, color: "#8a8278", marginBottom: 32 }}>
+            Il 68% delle richieste degli ospiti arriva fuori dall'orario di reception. 
+            Ogni domanda senza risposta è una prenotazione persa, un servizio non venduto, 
+            una recensione a 4 stelle invece che 5. Il vostro staff non può essere 
+            ovunque — Marcel sì.
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
+            {[
+              { icon: "🌙", title: "Di notte", text: "Il 42% delle richieste arriva tra le 22:00 e le 8:00" },
+              { icon: "🌍", title: "In altre lingue", text: "Ospiti internazionali bloccati dalla barriera linguistica" },
+              { icon: "💸", title: "Revenue perso", text: "Servizi extra non proposti = soldi lasciati sul tavolo" },
+            ].map((b, i) => (
+              <div key={i} style={{
+                padding: 28, borderRadius: 20, background: "rgba(255,255,255,0.018)",
+                border: "1px solid rgba(255,255,255,0.055)", textAlign: "left"
+              }}>
+                <div style={{ fontSize: 28, marginBottom: 12 }}>{b.icon}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#e8e0d0", marginBottom: 6 }}>{b.title}</div>
+                <div style={{ fontSize: 13, color: "#7a7268", lineHeight: 1.6 }}>{b.text}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      {/* ─── COME FUNZIONA ─── */}
+      <Section id="come-funziona" style={{ background: "rgba(255,255,255,0.012)" }}>
+        <div style={{ textAlign: "center", marginBottom: 48 }}>
+          <SectionLabel>Come funziona</SectionLabel>
+          <h2 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 38, fontWeight: 600, color: "#f5ede0", letterSpacing: -0.5 }}>
+            Tre passi. Nessun codice.
+          </h2>
+        </div>
+        <div style={{ display: "flex", gap: 24, flexWrap: "wrap", justifyContent: "center" }}>
+          {[
+            { step: "01", title: "Ci raccontate il vostro hotel", desc: "Ci inviate le informazioni: servizi, tariffe, ristoranti partner, FAQ, attrazioni. Noi configuriamo Marcel con la vostra identità e il vostro tono di voce.", time: "Giorno 1" },
+            { step: "02", title: "Testiamo insieme", desc: "Vi mostriamo Marcel in azione. Affinate le risposte, aggiungete dettagli, approvate il comportamento. Tutto via una dashboard semplice.", time: "Giorno 2-3" },
+            { step: "03", title: "Online in 48 ore", desc: "Installiamo il widget sul vostro sito con una riga di codice. Da quel momento, Marcel è operativo e ogni conversazione è tracciata nella vostra dashboard.", time: "Giorno 3-4" },
+          ].map((s, i) => (
+            <div key={i} style={{
+              flex: "1 1 300px", maxWidth: 340, padding: 32, borderRadius: 20,
+              background: "rgba(255,255,255,0.02)", border: "1px solid rgba(212,175,120,0.08)",
+              position: "relative", overflow: "hidden"
             }}>
               <div style={{
-                width: "6px", height: "6px", borderRadius: "50%",
-                background: "#b84040", marginBottom: "32px",
-                animation: "pulse 1.5s ease-in-out infinite"
-              }} />
-              <h2 style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "14px", fontWeight: 400,
-                letterSpacing: "0.15em", textTransform: "uppercase",
-                opacity: 0.4, marginBottom: "40px"
-              }}>La tua tachicardia, riscritta</h2>
-
-              <div style={{
-                maxWidth: "520px", width: "100%",
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "clamp(18px, 3vw, 22px)", fontWeight: 300,
-                lineHeight: 1.9, fontStyle: "italic", textAlign: "center",
-                minHeight: "200px"
-              }}>
-                {generatedStory.substring(0, revealedChars)}
-                {revealedChars < generatedStory.length && (
-                  <span style={{ opacity: 0.4, animation: "pulse 1s infinite" }}>|</span>
-                )}
+                position: "absolute", top: -10, right: -5,
+                fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 80, fontWeight: 900,
+                color: "rgba(212,175,120,0.06)", lineHeight: 1
+              }}>{s.step}</div>
+              <div style={{ position: "relative" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, color: "#c9a96e", marginBottom: 12 }}>{s.time}</div>
+                <h3 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 20, fontWeight: 700, color: "#f0e6d6", marginBottom: 12 }}>{s.title}</h3>
+                <p style={{ fontSize: 14, lineHeight: 1.7, color: "#7a7268" }}>{s.desc}</p>
               </div>
+            </div>
+          ))}
+        </div>
+      </Section>
 
-              {revealedChars >= generatedStory.length && (
-                <div style={{ animation: "fadeInUp 0.8s ease-out", textAlign: "center", marginTop: "48px" }}>
-                  <div style={{ width: "40px", height: "1px", background: "rgba(184,64,64,0.4)", margin: "0 auto 32px" }} />
-                  <p style={{
-                    fontFamily: "'Cormorant Garamond', serif",
-                    fontSize: "15px", fontWeight: 300, opacity: 0.5,
-                    lineHeight: 1.7, marginBottom: "28px"
-                  }}>
-                    Questa è la tua storia. Ce ne sono altre.<br/>Ce n'è una intera, in un libro.
-                  </p>
+      {/* ─── FEATURES ─── */}
+      <Section id="demo">
+        <div style={{ textAlign: "center", marginBottom: 48 }}>
+          <SectionLabel>Funzionalità</SectionLabel>
+          <h2 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 38, fontWeight: 600, color: "#f5ede0", letterSpacing: -0.5 }}>
+            Tutto quello che serve. Niente di superfluo.
+          </h2>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+          {FEATURES.map((f, i) => (
+            <div key={i} style={{
+              padding: "28px 24px", borderRadius: 20,
+              background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)"
+            }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(212,175,120,0.2)"}
+              onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)"}>
+              <div style={{ fontSize: 28, marginBottom: 14 }}>{f.icon}</div>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: "#f0e6d6", marginBottom: 8 }}>{f.title}</h3>
+              <p style={{ fontSize: 13, lineHeight: 1.7, color: "#7a7268" }}>{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </Section>
 
-                  <a href="https://amzn.eu/d/0bqAXEFI" target="_blank" rel="noopener noreferrer"
-                    style={{
-                      display: "inline-block", padding: "14px 36px",
-                      background: "rgba(184,64,64,0.15)",
-                      border: "1px solid rgba(184,64,64,0.5)",
-                      color: "#e8e0d6",
-                      fontFamily: "'Cormorant Garamond', serif",
-                      fontSize: "15px", fontWeight: 500,
-                      letterSpacing: "0.1em", textTransform: "uppercase",
-                      textDecoration: "none"
-                    }}>
-                    Leggi Tachicardia →
-                  </a>
+      {/* ─── TESTIMONIALS ─── */}
+      <Section style={{ background: "rgba(255,255,255,0.012)" }}>
+        <div style={{ textAlign: "center", marginBottom: 48 }}>
+          <SectionLabel>Cosa dicono i nostri clienti</SectionLabel>
+          <h2 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 38, fontWeight: 600, color: "#f5ede0", letterSpacing: -0.5 }}>
+            Risultati reali, non promesse.
+          </h2>
+        </div>
+        <div style={{ display: "flex", gap: 20, flexWrap: "wrap", justifyContent: "center" }}>
+          {TESTIMONIALS.map((t, i) => (
+            <div key={i} style={{
+              flex: "1 1 300px", maxWidth: 340, padding: 28, borderRadius: 16,
+              background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)"
+            }}>
+              <div style={{ color: "#c9a96e", fontSize: 16, marginBottom: 12, letterSpacing: 2 }}>{"★".repeat(t.stars)}</div>
+              <p style={{ fontSize: 14, lineHeight: 1.7, color: "#a0a090", marginBottom: 16, fontStyle: "italic" }}>"{t.text}"</p>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#e8e0d0" }}>{t.name}</div>
+                <div style={{ fontSize: 12, color: "#6a6a5a" }}>{t.role}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
 
-                  <div style={{ display: "flex", gap: "16px", marginTop: "24px", justifyContent: "center", flexWrap: "wrap" }}>
-                    <button onClick={() => { setView("write"); setUserText(""); setGeneratedStory(""); }}
-                      style={{ ...btnBase, padding: "10px 24px", fontSize: "12px", fontFamily: "'DM Sans', sans-serif", border: "1px solid rgba(232,224,214,0.15)" }}>
-                      Scrivi un altro
-                    </button>
-                    <button onClick={() => setView("wall")}
-                      style={{ ...btnBase, padding: "10px 24px", fontSize: "12px", fontFamily: "'DM Sans', sans-serif", border: "1px solid rgba(232,224,214,0.15)" }}>
-                      Vedi il muro
-                    </button>
+      {/* ─── PRICING ─── */}
+      <Section id="prezzi">
+        <div style={{ textAlign: "center", marginBottom: 48 }}>
+          <SectionLabel>Prezzi trasparenti</SectionLabel>
+          <h2 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 38, fontWeight: 600, color: "#f5ede0", letterSpacing: -0.5 }}>
+            Investimento chiaro. Zero sorprese.
+          </h2>
+          <p style={{ fontSize: 14, color: "#7a7268", marginTop: 12 }}>Setup una tantum + canone mensile. Disdici quando vuoi.</p>
+        </div>
+        <div style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
+          {PRICING.map((p, i) => (
+            <div key={i} style={{
+              flex: "1 1 280px", maxWidth: 340, padding: 32, borderRadius: 20,
+              background: p.popular ? "linear-gradient(180deg, rgba(212,175,120,0.08), rgba(212,175,120,0.02))" : "rgba(255,255,255,0.02)",
+              border: p.popular ? "1px solid rgba(212,175,120,0.3)" : "1px solid rgba(255,255,255,0.06)",
+              position: "relative"
+            }}>
+              {p.popular && <div style={{
+                position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)",
+                background: "linear-gradient(135deg, #d4af78, #b8924a)", color: "#0f0f0e",
+                fontSize: 10, fontWeight: 800, padding: "4px 16px", borderRadius: 20, textTransform: "uppercase", letterSpacing: 1
+              }}>Più scelto</div>}
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#c9a96e", marginBottom: 4 }}>{p.name}</div>
+              <div style={{ fontSize: 12, color: "#6a6a5a", marginBottom: 20 }}>{p.desc}</div>
+              <div style={{ marginBottom: 4 }}>
+                <span style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 40, fontWeight: 800, color: "#f0e6d6" }}>€{p.monthly}</span>
+                <span style={{ fontSize: 14, color: "#6a6a5a" }}>/mese</span>
+              </div>
+              <div style={{ fontSize: 12, color: "#7a7268", marginBottom: 24 }}>
+                Setup: <b style={{ color: "#c9a96e" }}>€{p.setup}</b> una tantum
+              </div>
+              <div style={{ marginBottom: 24 }}>
+                {p.features.map((f, j) => (
+                  <div key={j} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 10, fontSize: 13, color: "#a0a090" }}>
+                    <span style={{ color: "#c9a96e", fontSize: 14, lineHeight: 1, marginTop: 1 }}>✓</span>
+                    <span>{f}</span>
                   </div>
-                </div>
-              )}
+                ))}
+              </div>
+              <a href="#contatti" style={{
+                display: "block", textAlign: "center", padding: "13px 24px", borderRadius: 50, fontWeight: 600, fontSize: 13, letterSpacing: 0.5,
+                background: p.popular ? "linear-gradient(135deg, #d4af78, #b8924a)" : "transparent",
+                color: p.popular ? "#0f0f0e" : "#c9a96e",
+                border: p.popular ? "none" : "1px solid rgba(212,175,120,0.3)",
+                textDecoration: "none", transition: "transform .2s"
+              }}>{p.cta}</a>
             </div>
-          )}
+          ))}
+        </div>
+        <div style={{ textAlign: "center", marginTop: 32, fontSize: 13, color: "#6a6a5a" }}>
+          💡 Il costo medio di un receptionist notturno è €2.800/mese. Marcel parte da €89.
+        </div>
+      </Section>
 
-          {/* WALL */}
-          {view === "wall" && (
-            <div style={{ padding: "60px 24px", minHeight: "calc(100vh - 80px)", animation: "fadeInUp 0.6s ease-out" }}>
-              <div style={{ textAlign: "center", marginBottom: "48px" }}>
-                <h2 style={{
-                  fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: "clamp(28px, 5vw, 40px)", fontWeight: 300,
-                  fontStyle: "italic", marginBottom: "12px"
-                }}>Il muro dei battiti</h2>
-                <p style={{ fontSize: "14px", fontWeight: 300, opacity: 0.4, lineHeight: 1.6 }}>
-                  Ogni cuore ha la sua storia. Queste sono alcune.
-                </p>
+      {/* ─── ROI CALCULATOR ─── */}
+      <Section style={{ background: "rgba(255,255,255,0.012)" }}>
+        <div style={{ maxWidth: 600, margin: "0 auto", textAlign: "center" }}>
+          <SectionLabel>Il calcolo che conta</SectionLabel>
+          <h2 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 34, fontWeight: 600, color: "#f5ede0", letterSpacing: -0.5, marginBottom: 32 }}>
+            Quanto vi costa NON avere Marcel?
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, textAlign: "left" }}>
+            {[
+              { label: "Richieste notturne perse/mese", value: "~120", icon: "🌙" },
+              { label: "Conversione media in prenotazione", value: "8%", icon: "📊" },
+              { label: "Prenotazioni perse/mese", value: "~10", icon: "❌" },
+              { label: "Valore medio prenotazione", value: "€180", icon: "💰" },
+              { label: "Revenue perso/mese", value: "€1.800", icon: "📉" },
+              { label: "Costo Marcel Business/mese", value: "€149", icon: "✅" },
+            ].map((r, i) => (
+              <div key={i} style={{
+                padding: "16px", borderRadius: 12,
+                background: i === 5 ? "rgba(212,175,120,0.08)" : "rgba(255,255,255,0.02)",
+                border: i === 5 ? "1px solid rgba(212,175,120,0.2)" : "1px solid rgba(255,255,255,0.05)"
+              }}>
+                <div style={{ fontSize: 16, marginBottom: 6 }}>{r.icon}</div>
+                <div style={{ fontSize: 11, color: "#6a6a5a", marginBottom: 4 }}>{r.label}</div>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 700, color: i === 5 ? "#c9a96e" : "#f0e6d6" }}>{r.value}</div>
               </div>
+            ))}
+          </div>
+          <div style={{
+            marginTop: 24, padding: "20px 28px", borderRadius: 14,
+            background: "linear-gradient(135deg, rgba(212,175,120,0.1), rgba(212,175,120,0.03))",
+            border: "1px solid rgba(212,175,120,0.2)"
+          }}>
+            <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 24, fontWeight: 700, color: "#c9a96e" }}>ROI: 12x</div>
+            <div style={{ fontSize: 13, color: "#8a8278", marginTop: 4 }}>Per ogni euro investito in Marcel, ne recuperate dodici in revenue e risparmio operativo.</div>
+          </div>
+        </div>
+      </Section>
 
-              {wallStories.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "80px 0" }}>
-                  <HeartIcon size={24} style={{ color: "#b84040", opacity: 0.3, marginBottom: "16px" }} />
-                  <p style={{
-                    fontFamily: "'Cormorant Garamond', serif",
-                    fontSize: "18px", fontWeight: 300, fontStyle: "italic", opacity: 0.4
-                  }}>Nessun battito ancora. Sii il primo.</p>
-                  <button onClick={() => setView("write")}
-                    style={{ ...btnBase, marginTop: "24px", padding: "12px 32px", fontSize: "14px" }}>
-                    Scrivi
-                  </button>
-                </div>
-              ) : (
-                <div style={{ maxWidth: "680px", margin: "0 auto", display: "flex", flexDirection: "column" }}>
-                  {wallStories.map((story, i) => (
-                    <div key={story.id} style={{
-                      padding: "36px 0",
-                      borderBottom: "1px solid rgba(232,224,214,0.06)",
-                      animation: `slideIn 0.5s ease-out ${i * 0.1}s both`
-                    }}>
-                      <p style={{
-                        fontFamily: "'Cormorant Garamond', serif",
-                        fontSize: "18px", fontWeight: 300, fontStyle: "italic",
-                        lineHeight: 1.8, marginBottom: "16px"
-                      }}>"{story.generated}"</p>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <HeartIcon size={10} style={{ color: "#b84040", opacity: 0.5 }} />
-                        <span style={{ fontSize: "11px", fontWeight: 300, opacity: 0.3, letterSpacing: "0.05em" }}>{story.date}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+      {/* ─── CTA / CONTACT ─── */}
+      <Section id="contatti">
+        <div style={{ maxWidth: 560, margin: "0 auto", textAlign: "center" }}>
+          <SectionLabel>Iniziamo</SectionLabel>
+          <h2 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 38, fontWeight: 600, color: "#f5ede0", letterSpacing: -0.5, marginBottom: 12 }}>
+            Provate Marcel nel vostro hotel.
+          </h2>
+          <p style={{ fontSize: 15, color: "#7a7268", marginBottom: 36 }}>
+            Configuriamo una demo gratuita personalizzata con i dati del vostro hotel. 
+            Nessun impegno, nessuna carta di credito.
+          </p>
 
-              <div style={{ textAlign: "center", marginTop: "60px", paddingBottom: "40px" }}>
-                <div style={{ width: "40px", height: "1px", background: "rgba(184,64,64,0.3)", margin: "0 auto 24px" }} />
-                <p style={{
-                  fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: "15px", fontWeight: 300, fontStyle: "italic",
-                  opacity: 0.4, marginBottom: "20px"
-                }}>Tutte queste storie sono nate da una sola.</p>
-                <a href="https://amzn.eu/d/0bqAXEFI" target="_blank" rel="noopener noreferrer"
+          {!formSent ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {[
+                { ph: "Nome e cognome *", type: "text", key: "name" },
+                { ph: "Nome dell'hotel *", type: "text", key: "hotel" },
+                { ph: "Email *", type: "email", key: "email" },
+                { ph: "Telefono (opzionale)", type: "tel", key: "phone" },
+              ].map((f, i) => (
+                <input key={i} type={f.type} placeholder={f.ph} value={fields[f.key]}
+                  onChange={e => setFields(prev => ({ ...prev, [f.key]: e.target.value }))}
                   style={{
-                    display: "inline-block", padding: "12px 32px",
-                    background: "rgba(184,64,64,0.1)",
-                    border: "1px solid rgba(184,64,64,0.4)",
-                    color: "#e8e0d6",
-                    fontFamily: "'Cormorant Garamond', serif",
-                    fontSize: "14px", fontWeight: 500,
-                    letterSpacing: "0.1em", textTransform: "uppercase",
-                    textDecoration: "none"
-                  }}>
-                  Leggi Tachicardia →
-                </a>
+                    padding: "14px 18px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)",
+                    background: "rgba(255,255,255,0.03)", color: "#e8e0d0", fontSize: 14,
+                    fontFamily: "'DM Sans',sans-serif", outline: "none", transition: "border-color .2s"
+                  }}
+                  onFocus={e => e.target.style.borderColor = "rgba(212,175,120,0.3)"}
+                  onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.08)"}
+                />
+              ))}
+              <select value={fields.rooms} onChange={e => setFields(prev => ({ ...prev, rooms: e.target.value }))} style={{
+                padding: "14px 18px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)",
+                background: "rgba(255,255,255,0.03)", color: "#8a8278", fontSize: 14,
+                fontFamily: "'DM Sans',sans-serif", outline: "none"
+              }}>
+                <option value="">Quante camere ha il vostro hotel?</option>
+                <option>Meno di 20</option>
+                <option>20-50</option>
+                <option>50-100</option>
+                <option>Più di 100</option>
+              </select>
+              <button onClick={handleSubmit} disabled={formLoading} style={{
+                padding: "16px 32px", borderRadius: 50, border: "none", cursor: formLoading ? "wait" : "pointer",
+                background: "linear-gradient(135deg, #c9a96e, #b8924a)", color: "#0c0b09",
+                fontSize: 14, fontWeight: 700, letterSpacing: 0.5, fontFamily: "'DM Sans',sans-serif",
+                boxShadow: "0 4px 28px rgba(201,169,110,0.3)", transition: "all .25s",
+                opacity: formLoading ? 0.7 : 1
+              }}>{formLoading ? "Invio in corso..." : "Richiedi la demo gratuita →"}</button>
+              <div style={{ fontSize: 11, color: "#5a5a4a", marginTop: 4 }}>
+                🔒 I vostri dati sono al sicuro. Niente spam, promesso.
               </div>
+            </div>
+          ) : (
+            <div style={{
+              padding: 40, borderRadius: 20, background: "rgba(212,175,120,0.05)",
+              border: "1px solid rgba(212,175,120,0.15)"
+            }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
+              <h3 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 24, fontWeight: 700, color: "#c9a96e", marginBottom: 8 }}>Grazie!</h3>
+              <p style={{ fontSize: 15, color: "#8a8278" }}>Vi contatteremo entro 24 ore con una demo personalizzata per il vostro hotel.</p>
             </div>
           )}
         </div>
-      </div>
-    </>
+      </Section>
+
+      {/* ─── FOOTER ─── */}
+      <footer style={{
+        padding: "48px 24px", borderTop: "1px solid rgba(255,255,255,0.05)",
+        background: "rgba(0,0,0,0.5)"
+      }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <div style={{
+                width: 24, height: 24, borderRadius: 6, background: "linear-gradient(135deg, #d4af78, #b8924a)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 12, fontWeight: 800, color: "#0f0f0e"
+              }}>M</div>
+              <span style={{ fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 15, fontWeight: 700, color: "#f0e6d6" }}>Marcel Concierge</span>
+            </div>
+            <div style={{ fontSize: 11, color: "#5a5a4a" }}>AI concierge per l'ospitalità italiana.</div>
+          </div>
+          <div style={{ display: "flex", gap: 20, fontSize: 12, color: "#5a5a4a" }}>
+            <span>info@marcelconcierge.com</span>
+            <span>Milano, Italia</span>
+            <span>P.IVA IT00000000000</span>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }
