@@ -162,10 +162,15 @@ function ChatDemo() {
 
   const handleSend = (text) => {
     const messageText = text || input;
-    if (!messageText.trim() || isTyping) return;
+    console.log("[v0] handleSend called with:", messageText, "isTyping:", isTyping);
+    if (!messageText.trim() || isTyping) {
+      console.log("[v0] Returning early - empty message or typing");
+      return;
+    }
     
     // Add user message
     const userMsg = { id: Date.now().toString(), role: "user", text: messageText };
+    console.log("[v0] Adding user message:", userMsg);
     setMessages(prev => [...prev, userMsg]);
     setInput("");
     setIsTyping(true);
@@ -173,6 +178,7 @@ function ChatDemo() {
     // Simulate AI thinking and typing
     setTimeout(() => {
       const response = generateMarcelResponse(messageText);
+      console.log("[v0] Generated response:", response);
       const assistantMsg = { id: (Date.now() + 1).toString(), role: "assistant", text: response };
       setMessages(prev => [...prev, assistantMsg]);
       setIsTyping(false);
