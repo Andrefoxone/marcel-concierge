@@ -1,61 +1,112 @@
 'use client';
 
-import Chat from './Chat';
+import { useState, FormEvent } from 'react';
 
-const features = [
-  { icon: '🔑', title: 'Check-in Express', desc: 'Procedura digitale senza attese' },
-  { icon: '🍽️', title: 'Ristoranti', desc: 'Prenotazioni nei migliori locali' },
-  { icon: '💆', title: 'Spa & Wellness', desc: 'Trattamenti personalizzati' },
-  { icon: '🚗', title: 'Transfer', desc: 'Auto con autista h24' },
-  { icon: '🛎️', title: 'Room Service', desc: 'Servizio in camera 24/7' },
-  { icon: '🎭', title: 'Esperienze', desc: 'Eventi e attrazioni esclusive' },
-];
+type Message = { role: 'user' | 'assistant'; text: string };
 
-export default function Home() {
-  return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #0f0f0f 0%, #1a1a1a 100%)', color: '#f5f0e6', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+export default function Page() {
+  const [messages, setMessages] = useState<Message[]>([
+    { role: 'assistant', text: 'Buonasera! Sono Marcel, il concierge virtuale del Palazzo Sereno. Come posso assisterla oggi?' }
+  ]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!input.trim() || loading) return;
+    
+    const userMsg = input.trim();
+    setInput('');
+    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [...messages, { role: 'user', content: userMsg }].map(m => ({ role: m.role, content: m.text })) }),
+      });
       
-      {/* Hero */}
-      <header style={{ padding: '80px 20px 60px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
-        <div style={{ display: 'inline-block', padding: '8px 20px', background: 'rgba(212,175,120,0.1)', borderRadius: '20px', marginBottom: '24px' }}>
-          <span style={{ color: '#d4af78', fontSize: '12px', fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase' }}>Concierge AI per Hotel di Lusso</span>
-        </div>
-        <h1 style={{ fontSize: 'clamp(48px, 10vw, 72px)', fontWeight: 300, color: '#d4af78', margin: '0 0 24px', letterSpacing: '12px', fontFamily: "'Cormorant Garamond', Georgia, serif" }}>MARCEL</h1>
-        <p style={{ fontSize: '18px', color: '#a09080', lineHeight: 1.7, maxWidth: '600px', margin: '0 auto' }}>
-          Il vostro concierge personale, disponibile 24 ore su 24, 7 giorni su 7.
-        </p>
+      if (!res.ok) throw new Error('API error');
+      
+      const text = await res.text();
+      setMessages(prev => [...prev, { role: 'assistant', text }]);
+    } catch {
+      setMessages(prev => [...prev, { role: 'assistant', text: 'Mi scusi, si è verificato un errore. Riprovi.' }]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function quickSend(text: string) {
+    if (loading) return;
+    setMessages(prev => [...prev, { role: 'user', text }]);
+    setLoading(true);
+
+    fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [...messages, { role: 'user', content: text }].map(m => ({ role: m.role, content: m.text })) }),
+    })
+      .then(res => res.text())
+      .then(responseText => setMessages(prev => [...prev, { role: 'assistant', text: responseText }]))
+      .catch(() => setMessages(prev => [...prev, { role: 'assistant', text: 'Errore. Riprovi.' }]))
+      .finally(() => setLoading(false));
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#fff', fontFamily: 'system-ui, sans-serif' }}>
+      <header style={{ textAlign: 'center', padding: '60px 20px 40px' }}>
+        <h1 style={{ fontSize: '2.5rem', fontWeight: 300, letterSpacing: '0.3em', color: '#d4af78', margin: 0 }}>MARCEL</h1>
+        <p style={{ color: '#888', marginTop: '10px' }}>Concierge AI per Hotel di Lusso</p>
       </header>
 
-      {/* Features */}
-      <section style={{ padding: '40px 20px 60px', maxWidth: '1000px', margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
-          {features.map((f, i) => (
-            <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,175,120,0.15)', borderRadius: '16px', padding: '24px' }}>
-              <span style={{ fontSize: '32px', display: 'block', marginBottom: '12px' }}>{f.icon}</span>
-              <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 600, color: '#e8e0d0' }}>{f.title}</h3>
-              <p style={{ margin: 0, fontSize: '14px', color: '#7a7268', lineHeight: 1.5 }}>{f.desc}</p>
+      <main style={{ maxWidth: '500px', margin: '0 auto', padding: '0 20px 60px' }}>
+        <div style={{ background: '#1a1a1a', borderRadius: '16px', overflow: 'hidden', border: '1px solid #333' }}>
+          <div style={{ padding: '16px', borderBottom: '1px solid #333', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #d4af78, #b8924a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>M</div>
+            <div>
+              <div style={{ fontWeight: 600 }}>Marcel</div>
+              <div style={{ fontSize: '12px', color: '#888' }}>Online - Palazzo Sereno</div>
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
 
-      {/* Chat Demo */}
-      <section style={{ padding: '60px 20px 80px', background: 'rgba(0,0,0,0.3)' }}>
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <h2 style={{ fontSize: '32px', fontWeight: 400, color: '#d4af78', margin: '0 0 12px', fontFamily: "'Cormorant Garamond', Georgia, serif" }}>Prova Marcel</h2>
-          <p style={{ color: '#7a7268', fontSize: '16px' }}>Scopri come Marcel può assistere i tuoi ospiti</p>
-        </div>
-        <Chat />
-        <p style={{ textAlign: 'center', marginTop: '24px', color: '#5a5a4a', fontSize: '13px' }}>
-          Prova a chiedere informazioni su check-in, ristoranti, spa o transfer.
-        </p>
-      </section>
+          <div style={{ padding: '12px', borderBottom: '1px solid #333', display: 'flex', gap: '8px' }}>
+            <button onClick={() => quickSend('A che ora è il check-in?')} disabled={loading} style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #d4af78', background: 'transparent', color: '#d4af78', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '13px' }}>Check-in</button>
+            <button onClick={() => quickSend('Mi consiglia un ristorante?')} disabled={loading} style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #d4af78', background: 'transparent', color: '#d4af78', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '13px' }}>Ristorante</button>
+            <button onClick={() => quickSend('Quali trattamenti spa avete?')} disabled={loading} style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #d4af78', background: 'transparent', color: '#d4af78', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '13px' }}>Spa</button>
+          </div>
 
-      {/* Footer */}
-      <footer style={{ padding: '40px 20px', borderTop: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' }}>
-        <p style={{ color: '#d4af78', fontSize: '24px', fontWeight: 300, letterSpacing: '6px', margin: '0 0 12px', fontFamily: "'Cormorant Garamond', Georgia, serif" }}>MARCEL</p>
-        <p style={{ color: '#5a5a4a', fontSize: '13px', margin: 0 }}>Concierge AI per Hotel di Lusso</p>
-      </footer>
+          <div style={{ height: '350px', overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {messages.map((m, i) => (
+              <div key={i} style={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '80%' }}>
+                <div style={{ padding: '12px 16px', borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px', background: m.role === 'user' ? 'linear-gradient(135deg, #d4af78, #b8924a)' : '#2a2a2a', color: m.role === 'user' ? '#000' : '#fff', fontSize: '14px', lineHeight: 1.5 }}>
+                  {m.text}
+                </div>
+              </div>
+            ))}
+            {loading && (
+              <div style={{ alignSelf: 'flex-start', padding: '12px 16px', borderRadius: '16px', background: '#2a2a2a', color: '#888' }}>
+                Marcel sta scrivendo...
+              </div>
+            )}
+          </div>
+
+          <form onSubmit={handleSubmit} style={{ padding: '12px', borderTop: '1px solid #333', display: 'flex', gap: '8px' }}>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Scrivi un messaggio..."
+              disabled={loading}
+              style={{ flex: 1, padding: '12px 16px', borderRadius: '12px', border: 'none', background: '#2a2a2a', color: '#fff', fontSize: '14px', outline: 'none' }}
+            />
+            <button type="submit" disabled={loading || !input.trim()} style={{ padding: '12px 20px', borderRadius: '12px', border: 'none', background: input.trim() && !loading ? 'linear-gradient(135deg, #d4af78, #b8924a)' : '#333', color: input.trim() && !loading ? '#000' : '#666', fontWeight: 600, cursor: input.trim() && !loading ? 'pointer' : 'not-allowed' }}>
+              Invia
+            </button>
+          </form>
+        </div>
+      </main>
     </div>
   );
 }
