@@ -210,7 +210,11 @@ export default function ChatDemo() {
           {suggestedQuestions.map((q, i) => (
             <button
               key={i}
-              onClick={() => handleSend(q)}
+              type="button"
+              onClick={() => {
+                console.log('[v0] Suggestion clicked:', q);
+                handleSend(q);
+              }}
               disabled={isLoading}
               style={{
                 padding: '6px 12px',
@@ -340,7 +344,11 @@ export default function ChatDemo() {
             }}
           />
           <button
-            onClick={() => handleSend()}
+            type="button"
+            onClick={() => {
+              console.log('[v0] Send button clicked, inputValue:', inputValue);
+              handleSend();
+            }}
             disabled={isLoading || !inputValue.trim()}
             style={{
               width: 36,
