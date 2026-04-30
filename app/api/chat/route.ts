@@ -60,32 +60,7 @@ export async function POST(req: Request) {
       })),
     });
 
-    // Create SSE stream from text stream
-    const encoder = new TextEncoder();
-    
-    const readable = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of result.textStream) {
-            const data = JSON.stringify({ type: 'text-delta', delta: chunk });
-            controller.enqueue(encoder.encode(`data: ${data}\n\n`));
-          }
-          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-          controller.close();
-        } catch (err) {
-          console.error('Stream error:', err);
-          controller.error(err);
-        }
-      },
-    });
-
-    return new Response(readable, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      },
-    });
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error('Chat API error:', error);
     return new Response(JSON.stringify({ error: 'Failed to process chat' }), {
