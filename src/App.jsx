@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 
 /* ─── DEMO CHAT DATA ─── */
 const DEMO_CONVERSATIONS = {
@@ -77,36 +79,54 @@ const PRICING = [
 /* ─── COMPONENTS ─── */
 
 function ChatDemo() {
-  const [activeConv, setActiveConv] = useState("checkin");
-  const [visibleMsgs, setVisibleMsgs] = useState(0);
-  const [isTyping, setIsTyping] = useState(false);
+  const [input, setInput] = useState("");
   const chatRef = useRef(null);
-  const msgs = DEMO_CONVERSATIONS[activeConv];
+  
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({ api: "/api/chat" }),
+    initialMessages: [
+      {
+        id: "welcome",
+        role: "assistant",
+        content: "Buonasera e benvenuto! Sono Marcel, il vostro concierge virtuale. Come posso assisterla oggi? Posso aiutarla con check-in, prenotazioni ristoranti, spa, transfer o qualsiasi altra necessita.",
+      },
+    ],
+  });
 
-  useEffect(() => {
-    setVisibleMsgs(0);
-    setIsTyping(false);
-    let timeouts = [];
-    msgs.forEach((msg, i) => {
-      if (msg.role === "marcel" && i > 0) {
-        timeouts.push(setTimeout(() => setIsTyping(true), i * 1800 - 600));
-      }
-      timeouts.push(setTimeout(() => {
-        setIsTyping(false);
-        setVisibleMsgs(i + 1);
-      }, i * 1800));
-    });
-    return () => timeouts.forEach(clearTimeout);
-  }, [activeConv]);
+  const isStreaming = status === "streaming" || status === "submitted";
 
   useEffect(() => {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
-  }, [visibleMsgs, isTyping]);
+  }, [messages, isStreaming]);
 
-  const convTabs = [
-    { id: "checkin", label: "Check-in", icon: "🔑" },
-    { id: "ristorante", label: "Ristorante", icon: "🍽" },
-    { id: "spa", label: "Spa", icon: "💆" },
+  const handleSend = () => {
+    if (!input.trim() || isStreaming) return;
+    sendMessage({ text: input });
+    setInput("");
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  // Helper to extract text from message parts
+  const getMessageText = (msg) => {
+    if (msg.parts && Array.isArray(msg.parts)) {
+      return msg.parts
+        .filter((p) => p.type === "text")
+        .map((p) => p.text)
+        .join("");
+    }
+    return msg.content || "";
+  };
+
+  const suggestedQuestions = [
+    "A che ora e il check-in?",
+    "Consiglia un ristorante?",
+    "La spa e aperta oggi?",
   ];
 
   return (
@@ -117,39 +137,72 @@ function ChatDemo() {
         <div>
           <div style={{ fontSize: 14, fontWeight: 700, color: "#f0e6d6", fontFamily: "'Cormorant Garamond',Georgia,serif" }}>Marcel</div>
           <div style={{ fontSize: 11, color: "#7a7268", display: "flex", alignItems: "center", gap: 4 }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4caf50", display: "inline-block" }}></span> Online — Boutique Hotel Demo
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: isStreaming ? "#f59e0b" : "#4caf50", display: "inline-block", animation: isStreaming ? "dotPulse .8s ease infinite" : "none" }}></span> 
+            {isStreaming ? "Marcel sta scrivendo..." : "Online — Boutique Hotel Demo"}
           </div>
         </div>
       </div>
 
-      {/* Scenario Tabs */}
-      <div style={{ display: "flex", gap: 0, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        {convTabs.map(t => (
-          <button key={t.id} onClick={() => setActiveConv(t.id)} style={{
-            flex: 1, padding: "10px 8px", background: activeConv === t.id ? "rgba(212,175,120,0.1)" : "transparent",
-            border: "none", borderBottom: activeConv === t.id ? "2px solid #c9a96e" : "2px solid transparent",
-            color: activeConv === t.id ? "#c9a96e" : "#6a6a5a", fontSize: 11, fontWeight: 700, cursor: "pointer",
-            fontFamily: "'DM Sans',sans-serif", transition: "all .2s"
-          }}>{t.icon} {t.label}</button>
-        ))}
-      </div>
+      {/* Suggested Questions - show only when chat has just the welcome message */}
+      {messages.length === 1 && (
+        <div style={{ padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {suggestedQuestions.map((q, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                setInput(q);
+                setTimeout(() => {
+                  sendMessage({ text: q });
+                  setInput("");
+                }, 100);
+              }}
+              style={{
+                padding: "6px 12px",
+                borderRadius: 20,
+                background: "rgba(212,175,120,0.1)",
+                border: "1px solid rgba(212,175,120,0.2)",
+                color: "#c9a96e",
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: "pointer",
+                fontFamily: "'DM Sans',sans-serif",
+                transition: "all .2s",
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = "rgba(212,175,120,0.2)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = "rgba(212,175,120,0.1)";
+              }}
+            >
+              {q}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Messages */}
       <div ref={chatRef} style={{ padding: "16px", height: 320, overflowY: "auto", display: "flex", flexDirection: "column", gap: 10 }}>
-        {msgs.slice(0, visibleMsgs).map((msg, i) => (
-          <div key={`${activeConv}-${i}`} style={{
-            alignSelf: msg.role === "guest" ? "flex-end" : "flex-start",
-            maxWidth: "85%", animation: "msgIn .35s ease",
-          }}>
-            <div style={{
-              padding: "10px 14px", borderRadius: msg.role === "guest" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-              background: msg.role === "guest" ? "linear-gradient(135deg, #d4af78, #b8924a)" : "rgba(255,255,255,0.06)",
-              color: msg.role === "guest" ? "#1a1a1a" : "#e0d8c8",
-              fontSize: 13, lineHeight: 1.55, fontFamily: "'DM Sans',sans-serif", whiteSpace: "pre-line"
-            }}>{msg.text}</div>
-          </div>
-        ))}
-        {isTyping && (
+        {messages.map((msg, i) => {
+          const text = getMessageText(msg);
+          const isUser = msg.role === "user";
+          
+          return (
+            <div key={msg.id || i} style={{
+              alignSelf: isUser ? "flex-end" : "flex-start",
+              maxWidth: "85%", animation: "msgIn .35s ease",
+            }}>
+              <div style={{
+                padding: "10px 14px", 
+                borderRadius: isUser ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+                background: isUser ? "linear-gradient(135deg, #d4af78, #b8924a)" : "rgba(255,255,255,0.06)",
+                color: isUser ? "#1a1a1a" : "#e0d8c8",
+                fontSize: 13, lineHeight: 1.55, fontFamily: "'DM Sans',sans-serif", whiteSpace: "pre-line"
+              }}>{text}</div>
+            </div>
+          );
+        })}
+        {isStreaming && messages[messages.length - 1]?.role === "user" && (
           <div style={{ alignSelf: "flex-start", animation: "msgIn .2s ease" }}>
             <div style={{ padding: "10px 18px", borderRadius: "16px 16px 16px 4px", background: "rgba(255,255,255,0.06)", display: "flex", gap: 4 }}>
               {[0,1,2].map(i => <span key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: "#c9a96e", animation: `dotPulse .8s ease ${i * 0.15}s infinite` }}></span>)}
@@ -160,9 +213,44 @@ function ChatDemo() {
 
       {/* Input Bar */}
       <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(255,255,255,0.06)", background: "#1e1e1e" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.05)", borderRadius: 12, padding: "10px 14px" }}>
-          <span style={{ flex: 1, fontSize: 13, color: "#5a5a4a" }}>Scrivi un messaggio...</span>
-          <span style={{ fontSize: 18, opacity: 0.4 }}>↗</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.05)", borderRadius: 12, padding: "4px 4px 4px 14px" }}>
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Scrivi un messaggio..."
+            disabled={isStreaming}
+            style={{
+              flex: 1,
+              fontSize: 13,
+              color: "#e8e0d0",
+              background: "transparent",
+              border: "none",
+              outline: "none",
+              fontFamily: "'DM Sans',sans-serif",
+            }}
+          />
+          <button
+            onClick={handleSend}
+            disabled={isStreaming || !input.trim()}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 8,
+              background: input.trim() && !isStreaming ? "linear-gradient(135deg, #d4af78, #b8924a)" : "rgba(255,255,255,0.05)",
+              border: "none",
+              cursor: input.trim() && !isStreaming ? "pointer" : "default",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 16,
+              color: input.trim() && !isStreaming ? "#1a1a1a" : "#5a5a4a",
+              transition: "all .2s",
+            }}
+          >
+            {isStreaming ? "..." : "↗"}
+          </button>
         </div>
       </div>
     </div>

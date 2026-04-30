@@ -10,6 +10,8 @@
     "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
+    "@ai-sdk/react": "^3.0.172",
+    "ai": "^6.0.170",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
