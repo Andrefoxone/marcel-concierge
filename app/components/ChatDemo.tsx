@@ -7,6 +7,7 @@ import { DefaultChatTransport } from 'ai';
 export default function ChatDemo() {
   const [inputValue, setInputValue] = useState('');
   const chatRef = useRef<HTMLDivElement>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({ api: '/api/chat' }),
@@ -14,12 +15,23 @@ export default function ChatDemo() {
       {
         id: 'welcome',
         role: 'assistant',
-        parts: [{ type: 'text', text: 'Buonasera e benvenuto al Palazzo Sereno! Sono Marcel, il vostro concierge virtuale. Come posso assisterla oggi? Posso aiutarla con check-in, prenotazioni ristoranti, spa, transfer o qualsiasi altra necessita.' }],
+        parts: [{ type: 'text' as const, text: 'Buonasera e benvenuto al Palazzo Sereno! Sono Marcel, il vostro concierge virtuale. Come posso assisterla oggi? Posso aiutarla con check-in, prenotazioni ristoranti, spa, transfer o qualsiasi altra necessita.' }],
       },
     ],
+    onError: (err) => {
+      console.error('[v0] Chat error:', err);
+      setError(err.message || 'Errore di connessione');
+    },
   });
 
   const isStreaming = status === 'streaming' || status === 'submitted';
+  
+  // Clear error when user sends new message
+  useEffect(() => {
+    if (status === 'submitted') {
+      setError(null);
+    }
+  }, [status]);
 
   useEffect(() => {
     if (chatRef.current) {
@@ -235,6 +247,20 @@ export default function ChatDemo() {
                 />
               ))}
             </div>
+          </div>
+        )}
+        {error && (
+          <div style={{ 
+            alignSelf: 'center', 
+            padding: '8px 16px', 
+            background: 'rgba(239, 68, 68, 0.2)', 
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            borderRadius: 12, 
+            color: '#fca5a5', 
+            fontSize: 12,
+            textAlign: 'center'
+          }}>
+            {error}
           </div>
         )}
       </div>
