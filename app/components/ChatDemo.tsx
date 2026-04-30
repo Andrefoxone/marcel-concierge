@@ -9,6 +9,7 @@ interface Message {
 }
 
 export default function ChatDemo() {
+  console.log('[v0] ChatDemo component rendered');
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -29,7 +30,12 @@ export default function ChatDemo() {
 
   const handleSend = async (text?: string) => {
     const messageText = text || inputValue;
-    if (!messageText.trim() || isLoading) return;
+    console.log('[v0] handleSend called:', messageText, 'isLoading:', isLoading);
+    if (!messageText.trim() || isLoading) {
+      console.log('[v0] Early return');
+      return;
+    }
+    console.log('[v0] Sending message...');
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -43,6 +49,7 @@ export default function ChatDemo() {
     setError(null);
 
     try {
+      console.log('[v0] Calling fetch /api/chat...');
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
