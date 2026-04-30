@@ -1,6 +1,6 @@
-import dynamic from 'next/dynamic';
+'use client';
 
-const Chat = dynamic(() => import('./Chat'), { ssr: false });
+import Chat from './Chat';
 
 const features = [
   { icon: '🔑', title: 'Check-in Express', desc: 'Procedura digitale senza attese' },
