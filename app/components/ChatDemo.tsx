@@ -26,6 +26,11 @@ export default function ChatDemo() {
 
   const isStreaming = status === 'streaming' || status === 'submitted';
   
+  // Debug logging
+  useEffect(() => {
+    console.log('[v0] Chat status:', status, 'Messages count:', messages.length);
+  }, [status, messages.length]);
+  
   // Clear error when user sends new message
   useEffect(() => {
     if (status === 'submitted') {
@@ -41,7 +46,12 @@ export default function ChatDemo() {
 
   const handleSend = (text?: string) => {
     const messageText = text || inputValue;
-    if (!messageText.trim() || isStreaming) return;
+    console.log('[v0] handleSend called with:', messageText, 'isStreaming:', isStreaming);
+    if (!messageText.trim() || isStreaming) {
+      console.log('[v0] Early return - empty or streaming');
+      return;
+    }
+    console.log('[v0] Calling sendMessage...');
     sendMessage({ text: messageText });
     setInputValue('');
   };
