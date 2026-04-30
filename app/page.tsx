@@ -1,343 +1,193 @@
 import ChatDemo from './components/ChatDemo';
 
-const FEATURES = [
-  {
-    icon: "🌙",
-    title: "24/7 Disponibile",
-    desc: "Assistenza continua, giorno e notte, senza attese"
-  },
-  {
-    icon: "🗣️",
-    title: "Multilingua",
-    desc: "Comunica in italiano, inglese, francese, tedesco e altre lingue"
-  },
-  {
-    icon: "⚡",
-    title: "Risposte Immediate",
-    desc: "Informazioni istantanee su servizi, prenotazioni e richieste"
-  },
-  {
-    icon: "🎯",
-    title: "Personalizzato",
-    desc: "Si adatta al tono e ai servizi specifici del tuo hotel"
-  }
-];
-
-const SCENARIOS = [
-  { icon: "🔑", title: "Check-in", desc: "Gestione arrivi e partenze" },
-  { icon: "🍽️", title: "Ristoranti", desc: "Prenotazioni e consigli culinari" },
-  { icon: "💆", title: "Spa & Wellness", desc: "Trattamenti e disponibilità" },
-  { icon: "🚗", title: "Transfer", desc: "Taxi e trasporti privati" },
-  { icon: "🎭", title: "Esperienze", desc: "Eventi e attrazioni locali" },
-  { icon: "🛎️", title: "Room Service", desc: "Ordini e richieste in camera" }
-];
-
 export default function Home() {
   return (
-    <main style={{ 
-      minHeight: '100vh',
-      background: 'linear-gradient(180deg, #0a0a0a 0%, #141414 50%, #0a0a0a 100%)',
-      fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif"
-    }}>
-      {/* Keyframes */}
-      <style>{`
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-        @keyframes shimmer {
-          0% { background-position: -200% center; }
-          100% { background-position: 200% center; }
-        }
-        @keyframes msgIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes dotPulse {
-          0%, 100% { opacity: 0.3; transform: scale(0.8); }
-          50% { opacity: 1; transform: scale(1); }
-        }
-      `}</style>
-
-      {/* Navigation */}
-      <nav style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 100,
-        padding: '16px 40px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        background: 'rgba(10,10,10,0.8)',
-        backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255,255,255,0.05)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{
-            width: 36,
-            height: 36,
-            borderRadius: 10,
-            background: 'linear-gradient(135deg, #d4af78, #b8924a)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 16,
-            fontWeight: 700,
-            color: '#1a1a1a'
-          }}>M</div>
-          <span style={{
-            fontSize: 18,
-            fontWeight: 600,
-            color: '#f0e6d6',
-            fontFamily: "'Cormorant Garamond', Georgia, serif",
-            letterSpacing: 2
-          }}>MARCEL</span>
-        </div>
-        <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
-          <a href="#features" style={{ color: '#8a8a7a', fontSize: 13, textDecoration: 'none', fontWeight: 500 }}>Funzionalità</a>
-          <a href="#demo" style={{ color: '#8a8a7a', fontSize: 13, textDecoration: 'none', fontWeight: 500 }}>Demo</a>
-          <a href="#contact" style={{ color: '#8a8a7a', fontSize: 13, textDecoration: 'none', fontWeight: 500 }}>Contatti</a>
-          <button style={{
-            padding: '10px 24px',
-            background: 'linear-gradient(135deg, #d4af78, #b8924a)',
-            border: 'none',
-            borderRadius: 8,
-            color: '#1a1a1a',
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: 'pointer'
-          }}>Richiedi Demo</button>
-        </div>
-      </nav>
-
+    <div style={{ minHeight: '100vh', background: '#0f0f0f', color: '#f0e6d6' }}>
       {/* Hero Section */}
-      <section style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
+      <header style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
         justifyContent: 'center',
-        padding: '120px 40px 80px',
+        padding: '40px 20px',
+        background: 'radial-gradient(ellipse at top, #1a1a1a 0%, #0f0f0f 70%)',
         position: 'relative',
         overflow: 'hidden'
       }}>
-        {/* Background Effects */}
         <div style={{
           position: 'absolute',
-          top: '20%',
-          left: '10%',
-          width: 400,
-          height: 400,
-          background: 'radial-gradient(circle, rgba(212,175,120,0.08) 0%, transparent 70%)',
-          borderRadius: '50%',
-          filter: 'blur(60px)'
+          top: '-50%',
+          left: '-20%',
+          width: '140%',
+          height: '200%',
+          background: 'radial-gradient(circle at 30% 20%, rgba(212,175,120,0.03) 0%, transparent 50%)',
+          pointerEvents: 'none'
         }} />
-        <div style={{
-          position: 'absolute',
-          bottom: '10%',
-          right: '15%',
-          width: 300,
-          height: 300,
-          background: 'radial-gradient(circle, rgba(184,146,74,0.06) 0%, transparent 70%)',
-          borderRadius: '50%',
-          filter: 'blur(40px)'
-        }} />
+        
+        <div style={{ marginBottom: 24, textAlign: 'center', position: 'relative', zIndex: 1 }}>
+          <h1 style={{ 
+            fontSize: 'clamp(48px, 8vw, 72px)', 
+            fontWeight: 300, 
+            letterSpacing: '0.3em',
+            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            color: '#c9a96e',
+            margin: 0
+          }}>
+            MARCEL
+          </h1>
+          <p style={{ 
+            fontSize: 'clamp(14px, 2vw, 18px)', 
+            color: '#8a7a6a', 
+            letterSpacing: '0.2em',
+            marginTop: 8,
+            fontFamily: "'DM Sans', sans-serif"
+          }}>
+            Concierge AI per Hotel di Lusso
+          </p>
+        </div>
 
-        <div style={{
-          maxWidth: 1200,
-          margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 80,
-          alignItems: 'center',
+        <p style={{ 
+          maxWidth: 600, 
+          textAlign: 'center', 
+          color: '#9a8a7a', 
+          fontSize: 'clamp(16px, 2vw, 20px)',
+          lineHeight: 1.7,
+          marginBottom: 48,
+          padding: '0 20px',
           position: 'relative',
           zIndex: 1
         }}>
-          {/* Left - Text Content */}
-          <div style={{ animation: 'fadeInUp 0.8s ease' }}>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '8px 16px',
-              background: 'rgba(212,175,120,0.1)',
-              borderRadius: 20,
-              marginBottom: 24
-            }}>
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#4caf50' }} />
-              <span style={{ fontSize: 12, color: '#c9a96e', fontWeight: 500 }}>Powered by AI</span>
-            </div>
-            
-            <h1 style={{
-              fontSize: 56,
-              fontWeight: 600,
-              color: '#f5f0e6',
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
-              lineHeight: 1.1,
-              margin: '0 0 24px'
-            }}>
-              Il Concierge
-              <br />
-              <span style={{
-                background: 'linear-gradient(90deg, #d4af78, #e8c992, #d4af78)',
-                backgroundSize: '200% auto',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                animation: 'shimmer 3s linear infinite'
-              }}>Intelligente</span>
-              <br />
-              per il tuo Hotel
-            </h1>
-            
-            <p style={{
-              fontSize: 17,
-              color: '#8a8a7a',
-              lineHeight: 1.7,
-              margin: '0 0 40px',
-              maxWidth: 480
-            }}>
-              Marcel trasforma l&apos;esperienza degli ospiti con un assistente AI 
-              disponibile 24/7. Risposte immediate, prenotazioni semplificate, 
-              servizio impeccabile in ogni lingua.
-            </p>
-            
-            <div style={{ display: 'flex', gap: 16 }}>
-              <button style={{
-                padding: '16px 32px',
-                background: 'linear-gradient(135deg, #d4af78, #b8924a)',
-                border: 'none',
-                borderRadius: 12,
-                color: '#1a1a1a',
-                fontSize: 15,
-                fontWeight: 600,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
-              }}>
-                Inizia Ora
-                <span>→</span>
-              </button>
-              <button style={{
-                padding: '16px 32px',
-                background: 'transparent',
-                border: '1px solid rgba(212,175,120,0.3)',
-                borderRadius: 12,
-                color: '#c9a96e',
-                fontSize: 15,
-                fontWeight: 500,
-                cursor: 'pointer'
-              }}>
-                Guarda Video
-              </button>
-            </div>
-            
-            {/* Stats */}
-            <div style={{
-              display: 'flex',
-              gap: 48,
-              marginTop: 60,
-              paddingTop: 40,
-              borderTop: '1px solid rgba(255,255,255,0.06)'
-            }}>
-              {[
-                { value: '98%', label: 'Soddisfazione' },
-                { value: '24/7', label: 'Disponibilità' },
-                { value: '< 2s', label: 'Tempo risposta' }
-              ].map((stat, i) => (
-                <div key={i}>
-                  <div style={{ fontSize: 32, fontWeight: 700, color: '#d4af78', fontFamily: "'Cormorant Garamond', serif" }}>{stat.value}</div>
-                  <div style={{ fontSize: 12, color: '#6a6a5a', marginTop: 4 }}>{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+          L&apos;intelligenza artificiale al servizio dell&apos;ospitalita. 
+          Un concierge virtuale disponibile 24/7 per i tuoi ospiti.
+        </p>
 
-          {/* Right - Chat Demo */}
-          <div style={{ animation: 'fadeInUp 0.8s ease 0.2s both' }}>
-            <ChatDemo />
-          </div>
+        <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 460, padding: '0 20px' }}>
+          <ChatDemo />
         </div>
-      </section>
+
+        <p style={{ 
+          marginTop: 24, 
+          color: '#5a5a4a', 
+          fontSize: 13,
+          position: 'relative',
+          zIndex: 1
+        }}>
+          Prova a chiedere informazioni su check-in, ristoranti, spa o transfer
+        </p>
+      </header>
 
       {/* Features Section */}
-      <section id="features" style={{
-        padding: '100px 40px',
-        background: 'rgba(255,255,255,0.01)'
+      <section style={{ 
+        padding: '100px 20px', 
+        background: '#0a0a0a',
+        borderTop: '1px solid rgba(212,175,120,0.1)'
       }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 60 }}>
-            <h2 style={{
-              fontSize: 40,
-              fontWeight: 600,
-              color: '#f0e6d6',
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
-              margin: '0 0 16px'
-            }}>Perché scegliere Marcel</h2>
-            <p style={{ fontSize: 15, color: '#6a6a5a', maxWidth: 500, margin: '0 auto' }}>
-              Un assistente AI progettato per l&apos;eccellenza dell&apos;ospitalità
-            </p>
-          </div>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: 24
+          <h2 style={{ 
+            textAlign: 'center', 
+            fontSize: 'clamp(32px, 5vw, 48px)', 
+            fontWeight: 300,
+            color: '#c9a96e',
+            letterSpacing: '0.15em',
+            marginBottom: 16,
+            fontFamily: "'Cormorant Garamond', Georgia, serif"
           }}>
-            {FEATURES.map((f, i) => (
-              <div key={i} style={{
+            Perche Marcel
+          </h2>
+          <p style={{ 
+            textAlign: 'center', 
+            color: '#7a7268', 
+            maxWidth: 600, 
+            margin: '0 auto 64px',
+            fontSize: 16,
+            lineHeight: 1.7
+          }}>
+            Un concierge AI che trasforma l&apos;esperienza degli ospiti nel tuo hotel
+          </p>
+
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: 32
+          }}>
+            {[
+              { icon: '24/7', title: 'Sempre Disponibile', desc: 'Assistenza immediata in ogni momento, giorno e notte, senza attese' },
+              { icon: '🌍', title: 'Multilingua', desc: 'Comunica fluentemente in oltre 50 lingue per ospiti internazionali' },
+              { icon: '✨', title: 'Personalizzato', desc: "Si adatta al tono e allo stile del tuo brand per un'esperienza unica" },
+              { icon: '📊', title: 'Analytics', desc: 'Insights dettagliati sulle richieste e preferenze degli ospiti' },
+              { icon: '🔗', title: 'Integrazioni', desc: 'Si connette con PMS, booking engine e sistemi esistenti' },
+              { icon: '🎯', title: 'Upselling', desc: 'Suggerisce servizi aggiuntivi aumentando il revenue per ospite' },
+            ].map((feature, i) => (
+              <div key={i} style={{ 
                 padding: 32,
-                background: 'rgba(255,255,255,0.02)',
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.01) 100%)',
                 borderRadius: 16,
-                border: '1px solid rgba(255,255,255,0.05)',
-                transition: 'all 0.3s ease'
+                border: '1px solid rgba(212,175,120,0.1)'
               }}>
-                <div style={{ fontSize: 32, marginBottom: 16 }}>{f.icon}</div>
-                <h3 style={{ fontSize: 18, fontWeight: 600, color: '#e0d8c8', margin: '0 0 8px' }}>{f.title}</h3>
-                <p style={{ fontSize: 13, color: '#6a6a5a', lineHeight: 1.6, margin: 0 }}>{f.desc}</p>
+                <div style={{ 
+                  fontSize: 32, 
+                  marginBottom: 16,
+                  color: feature.icon === '24/7' ? '#c9a96e' : 'inherit',
+                  fontWeight: feature.icon === '24/7' ? 700 : 400
+                }}>
+                  {feature.icon}
+                </div>
+                <h3 style={{ fontSize: 18, fontWeight: 600, color: '#e8dcc8', marginBottom: 8 }}>
+                  {feature.title}
+                </h3>
+                <p style={{ color: '#7a7268', fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+                  {feature.desc}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Scenarios Section */}
-      <section style={{ padding: '80px 40px' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 60 }}>
-            <h2 style={{
-              fontSize: 40,
-              fontWeight: 600,
-              color: '#f0e6d6',
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
-              margin: '0 0 16px'
-            }}>Cosa può fare Marcel</h2>
-            <p style={{ fontSize: 15, color: '#6a6a5a' }}>
-              Gestisce ogni aspetto dell&apos;esperienza ospite
-            </p>
-          </div>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(6, 1fr)',
-            gap: 16
+      {/* How it Works */}
+      <section style={{ 
+        padding: '100px 20px', 
+        background: '#0f0f0f',
+        borderTop: '1px solid rgba(212,175,120,0.1)'
+      }}>
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <h2 style={{ 
+            textAlign: 'center', 
+            fontSize: 'clamp(32px, 5vw, 48px)', 
+            fontWeight: 300,
+            color: '#c9a96e',
+            letterSpacing: '0.15em',
+            marginBottom: 64,
+            fontFamily: "'Cormorant Garamond', Georgia, serif"
           }}>
-            {SCENARIOS.map((s, i) => (
-              <div key={i} style={{
-                padding: 24,
-                background: 'rgba(255,255,255,0.02)',
-                borderRadius: 12,
-                border: '1px solid rgba(255,255,255,0.05)',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: 28, marginBottom: 12 }}>{s.icon}</div>
-                <h4 style={{ fontSize: 14, fontWeight: 600, color: '#c9a96e', margin: '0 0 4px' }}>{s.title}</h4>
-                <p style={{ fontSize: 11, color: '#5a5a5a', margin: 0 }}>{s.desc}</p>
+            Come Funziona
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 48 }}>
+            {[
+              { step: '01', title: 'Configurazione', desc: 'Personalizziamo Marcel con le informazioni del tuo hotel, servizi, orari e tone of voice' },
+              { step: '02', title: 'Integrazione', desc: 'Marcel si integra con il tuo sito web, app o sistemi di messaggistica esistenti' },
+              { step: '03', title: 'Assistenza', desc: 'Gli ospiti ricevono risposte immediate e accurate su qualsiasi richiesta' },
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', gap: 32, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                <div style={{ 
+                  fontSize: 48, 
+                  fontWeight: 200, 
+                  color: 'rgba(212,175,120,0.3)',
+                  lineHeight: 1,
+                  minWidth: 80
+                }}>
+                  {item.step}
+                </div>
+                <div style={{ flex: 1, minWidth: 250 }}>
+                  <h3 style={{ fontSize: 24, fontWeight: 500, color: '#e8dcc8', marginBottom: 8 }}>
+                    {item.title}
+                  </h3>
+                  <p style={{ color: '#7a7268', fontSize: 16, lineHeight: 1.7, margin: 0 }}>
+                    {item.desc}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
@@ -345,89 +195,57 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section id="contact" style={{
-        padding: '100px 40px',
-        background: 'linear-gradient(135deg, rgba(212,175,120,0.05) 0%, rgba(184,146,74,0.02) 100%)'
+      <section style={{ 
+        padding: '100px 20px', 
+        background: 'linear-gradient(180deg, #0a0a0a 0%, #0f0f0f 100%)',
+        borderTop: '1px solid rgba(212,175,120,0.1)',
+        textAlign: 'center'
       }}>
-        <div style={{
-          maxWidth: 700,
-          margin: '0 auto',
-          textAlign: 'center'
+        <h2 style={{ 
+          fontSize: 'clamp(28px, 5vw, 40px)', 
+          fontWeight: 300,
+          color: '#c9a96e',
+          letterSpacing: '0.1em',
+          marginBottom: 24
         }}>
-          <h2 style={{
-            fontSize: 44,
-            fontWeight: 600,
-            color: '#f0e6d6',
-            fontFamily: "'Cormorant Garamond', Georgia, serif",
-            margin: '0 0 20px'
-          }}>Trasforma il tuo hotel</h2>
-          <p style={{
-            fontSize: 16,
-            color: '#7a7a6a',
-            marginBottom: 40,
-            lineHeight: 1.7
-          }}>
-            Richiedi una demo personalizzata e scopri come Marcel può 
-            elevare l&apos;esperienza dei tuoi ospiti.
-          </p>
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
-            <input 
-              type="email" 
-              placeholder="La tua email"
-              style={{
-                padding: '16px 24px',
-                width: 300,
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 12,
-                color: '#e0d8c8',
-                fontSize: 14,
-                outline: 'none'
-              }}
-            />
-            <button style={{
-              padding: '16px 32px',
-              background: 'linear-gradient(135deg, #d4af78, #b8924a)',
-              border: 'none',
-              borderRadius: 12,
-              color: '#1a1a1a',
-              fontSize: 15,
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}>
-              Richiedi Demo
-            </button>
-          </div>
-        </div>
+          Pronto a Trasformare l&apos;Esperienza dei Tuoi Ospiti?
+        </h2>
+        <p style={{ color: '#7a7268', maxWidth: 500, margin: '0 auto 40px', fontSize: 16, lineHeight: 1.7 }}>
+          Richiedi una demo personalizzata per il tuo hotel
+        </p>
+        <button style={{
+          padding: '16px 48px',
+          fontSize: 14,
+          fontWeight: 600,
+          letterSpacing: '0.1em',
+          background: 'linear-gradient(135deg, #d4af78 0%, #b8924a 100%)',
+          color: '#0f0f0f',
+          border: 'none',
+          borderRadius: 8,
+          cursor: 'pointer'
+        }}>
+          RICHIEDI DEMO
+        </button>
       </section>
 
       {/* Footer */}
-      <footer style={{
-        padding: '40px',
-        borderTop: '1px solid rgba(255,255,255,0.05)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
+      <footer style={{ 
+        padding: '40px 20px', 
+        borderTop: '1px solid rgba(212,175,120,0.1)',
+        textAlign: 'center'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{
-            width: 28,
-            height: 28,
-            borderRadius: 8,
-            background: 'linear-gradient(135deg, #d4af78, #b8924a)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 12,
-            fontWeight: 700,
-            color: '#1a1a1a'
-          }}>M</div>
-          <span style={{ fontSize: 14, color: '#5a5a5a' }}>Marcel Concierge AI</span>
-        </div>
-        <p style={{ fontSize: 12, color: '#4a4a4a', margin: 0 }}>
-          © 2024 Marcel. Tutti i diritti riservati.
+        <p style={{ color: '#4a4a3a', fontSize: 13 }}>
+          © 2026 Marcel AI — Concierge Virtuale per Hotel di Lusso
         </p>
       </footer>
-    </main>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'DM Sans', sans-serif; }
+        @keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes dotPulse { 0%, 100% { opacity: 0.4; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1); } }
+      `}</style>
+    </div>
   );
 }

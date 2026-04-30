@@ -60,26 +60,30 @@ export async function POST(req: Request) {
       })),
     });
 
-    // Use simple text streaming
-    const stream = result.textStream;
-    
+    // Create SSE stream from text stream
     const encoder = new TextEncoder();
-    const readableStream = new ReadableStream({
+    
+    const readable = new ReadableStream({
       async start(controller) {
-        for await (const chunk of stream) {
-          const data = JSON.stringify({ type: 'text-delta', delta: chunk });
-          controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+        try {
+          for await (const chunk of result.textStream) {
+            const data = JSON.stringify({ type: 'text-delta', delta: chunk });
+            controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+          }
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+          controller.close();
+        } catch (err) {
+          console.error('Stream error:', err);
+          controller.error(err);
         }
-        controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-        controller.close();
       },
     });
 
-    return new Response(readableStream, {
+    return new Response(readable, {
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
-        Connection: 'keep-alive',
+        'Connection': 'keep-alive',
       },
     });
   } catch (error) {
