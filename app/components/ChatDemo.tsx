@@ -1,59 +1,106 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport } from 'ai';
+
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  text: string;
+}
 
 export default function ChatDemo() {
   const [inputValue, setInputValue] = useState('');
-  const chatRef = useRef<HTMLDivElement>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({ api: '/api/chat' }),
-    initialMessages: [
-      {
-        id: 'welcome',
-        role: 'assistant',
-        parts: [{ type: 'text' as const, text: 'Buonasera e benvenuto al Palazzo Sereno! Sono Marcel, il vostro concierge virtuale. Come posso assisterla oggi? Posso aiutarla con check-in, prenotazioni ristoranti, spa, transfer o qualsiasi altra necessita.' }],
-      },
-    ],
-    onError: (err) => {
-      console.error('[v0] Chat error:', err);
-      setError(err.message || 'Errore di connessione');
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: 'welcome',
+      role: 'assistant',
+      text: 'Buonasera e benvenuto al Palazzo Sereno! Sono Marcel, il vostro concierge virtuale. Come posso assisterla oggi? Posso aiutarla con check-in, prenotazioni ristoranti, spa, transfer o qualsiasi altra necessita.',
     },
-  });
-
-  const isStreaming = status === 'streaming' || status === 'submitted';
-  
-  // Debug logging
-  useEffect(() => {
-    console.log('[v0] Chat status:', status, 'Messages count:', messages.length);
-  }, [status, messages.length]);
-  
-  // Clear error when user sends new message
-  useEffect(() => {
-    if (status === 'submitted') {
-      setError(null);
-    }
-  }, [status]);
+  ]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const chatRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
-  }, [messages, isStreaming]);
+  }, [messages, isLoading]);
 
-  const handleSend = (text?: string) => {
+  const handleSend = async (text?: string) => {
     const messageText = text || inputValue;
-    console.log('[v0] handleSend called with:', messageText, 'isStreaming:', isStreaming);
-    if (!messageText.trim() || isStreaming) {
-      console.log('[v0] Early return - empty or streaming');
-      return;
-    }
-    console.log('[v0] Calling sendMessage...');
-    sendMessage({ text: messageText });
+    if (!messageText.trim() || isLoading) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      text: messageText,
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...messages, userMessage].map((m) => ({
+            role: m.role,
+            content: m.text,
+          })),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Errore nella risposta');
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('No reader');
+
+      const decoder = new TextDecoder();
+      let assistantText = '';
+      const assistantId = (Date.now() + 1).toString();
+
+      // Add empty assistant message
+      setMessages((prev) => [...prev, { id: assistantId, role: 'assistant', text: '' }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data:')) {
+            const data = line.slice(5).trim();
+            if (data === '[DONE]') continue;
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.type === 'text-delta' && parsed.delta) {
+                assistantText += parsed.delta;
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === assistantId ? { ...m, text: assistantText } : m
+                  )
+                );
+              }
+            } catch {
+              // Skip invalid JSON
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Chat error:', err);
+      setError('Errore di connessione. Riprova.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -61,16 +108,6 @@ export default function ChatDemo() {
       e.preventDefault();
       handleSend();
     }
-  };
-
-  const getMessageText = (msg: typeof messages[0]) => {
-    if (msg.parts && Array.isArray(msg.parts)) {
-      return msg.parts
-        .filter((p): p is { type: 'text'; text: string } => p.type === 'text')
-        .map((p) => p.text)
-        .join('');
-    }
-    return '';
   };
 
   const suggestedQuestions = [
@@ -124,7 +161,7 @@ export default function ChatDemo() {
               fontSize: 14,
               fontWeight: 700,
               color: '#f0e6d6',
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
+              fontFamily: 'Georgia, serif',
             }}
           >
             Marcel
@@ -143,12 +180,11 @@ export default function ChatDemo() {
                 width: 6,
                 height: 6,
                 borderRadius: '50%',
-                background: isStreaming ? '#f59e0b' : '#4caf50',
+                background: isLoading ? '#f59e0b' : '#4caf50',
                 display: 'inline-block',
-                animation: isStreaming ? 'pulse 1s ease infinite' : 'none',
               }}
             />
-            {isStreaming ? 'Marcel sta scrivendo...' : 'Online — Palazzo Sereno'}
+            {isLoading ? 'Marcel sta scrivendo...' : 'Online — Palazzo Sereno'}
           </div>
         </div>
       </div>
@@ -168,7 +204,7 @@ export default function ChatDemo() {
             <button
               key={i}
               onClick={() => handleSend(q)}
-              disabled={isStreaming}
+              disabled={isLoading}
               style={{
                 padding: '6px 12px',
                 borderRadius: 20,
@@ -177,10 +213,8 @@ export default function ChatDemo() {
                 color: '#c9a96e',
                 fontSize: 11,
                 fontWeight: 600,
-                cursor: isStreaming ? 'default' : 'pointer',
-                fontFamily: "'DM Sans', sans-serif",
-                transition: 'all .2s',
-                opacity: isStreaming ? 0.5 : 1,
+                cursor: isLoading ? 'default' : 'pointer',
+                opacity: isLoading ? 0.5 : 1,
               }}
             >
               {q}
@@ -202,16 +236,13 @@ export default function ChatDemo() {
         }}
       >
         {messages.map((msg) => {
-          const text = getMessageText(msg);
           const isUser = msg.role === 'user';
-
           return (
             <div
               key={msg.id}
               style={{
                 alignSelf: isUser ? 'flex-end' : 'flex-start',
                 maxWidth: '85%',
-                animation: 'msgIn .35s ease',
               }}
             >
               <div
@@ -224,17 +255,16 @@ export default function ChatDemo() {
                   color: isUser ? '#1a1a1a' : '#e0d8c8',
                   fontSize: 13,
                   lineHeight: 1.55,
-                  fontFamily: "'DM Sans', sans-serif",
                   whiteSpace: 'pre-line',
                 }}
               >
-                {text}
+                {msg.text || '...'}
               </div>
             </div>
           );
         })}
-        {isStreaming && messages[messages.length - 1]?.role === 'user' && (
-          <div style={{ alignSelf: 'flex-start', animation: 'msgIn .2s ease' }}>
+        {isLoading && messages[messages.length - 1]?.role === 'user' && (
+          <div style={{ alignSelf: 'flex-start' }}>
             <div
               style={{
                 padding: '10px 18px',
@@ -244,32 +274,25 @@ export default function ChatDemo() {
                 gap: 4,
               }}
             >
-              {[0, 1, 2].map((i) => (
-                <span
-                  key={i}
-                  style={{
-                    width: 7,
-                    height: 7,
-                    borderRadius: '50%',
-                    background: '#c9a96e',
-                    animation: `dotPulse .8s ease ${i * 0.15}s infinite`,
-                  }}
-                />
-              ))}
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#c9a96e', opacity: 0.4 }} />
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#c9a96e', opacity: 0.7 }} />
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#c9a96e', opacity: 1 }} />
             </div>
           </div>
         )}
         {error && (
-          <div style={{ 
-            alignSelf: 'center', 
-            padding: '8px 16px', 
-            background: 'rgba(239, 68, 68, 0.2)', 
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            borderRadius: 12, 
-            color: '#fca5a5', 
-            fontSize: 12,
-            textAlign: 'center'
-          }}>
+          <div
+            style={{
+              alignSelf: 'center',
+              padding: '8px 16px',
+              background: 'rgba(239, 68, 68, 0.2)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: 12,
+              color: '#fca5a5',
+              fontSize: 12,
+              textAlign: 'center',
+            }}
+          >
             {error}
           </div>
         )}
@@ -299,7 +322,7 @@ export default function ChatDemo() {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Scrivi un messaggio..."
-            disabled={isStreaming}
+            disabled={isLoading}
             style={{
               flex: 1,
               fontSize: 13,
@@ -307,49 +330,32 @@ export default function ChatDemo() {
               background: 'transparent',
               border: 'none',
               outline: 'none',
-              fontFamily: "'DM Sans', sans-serif",
             }}
           />
           <button
             onClick={() => handleSend()}
-            disabled={isStreaming || !inputValue.trim()}
+            disabled={isLoading || !inputValue.trim()}
             style={{
               width: 36,
               height: 36,
               borderRadius: 8,
               background:
-                inputValue.trim() && !isStreaming
+                inputValue.trim() && !isLoading
                   ? 'linear-gradient(135deg, #d4af78, #b8924a)'
                   : 'rgba(255,255,255,0.05)',
               border: 'none',
-              cursor: inputValue.trim() && !isStreaming ? 'pointer' : 'default',
+              cursor: inputValue.trim() && !isLoading ? 'pointer' : 'default',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 16,
-              color: inputValue.trim() && !isStreaming ? '#1a1a1a' : '#5a5a4a',
-              transition: 'all .2s',
+              color: inputValue.trim() && !isLoading ? '#1a1a1a' : '#5a5a4a',
             }}
           >
-            {isStreaming ? '...' : '↗'}
+            {isLoading ? '...' : '↗'}
           </button>
         </div>
       </div>
-
-      <style>{`
-        @keyframes msgIn {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes dotPulse {
-          0%, 100% { opacity: 0.4; transform: scale(0.8); }
-          50% { opacity: 1; transform: scale(1); }
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-      `}</style>
     </div>
   );
 }

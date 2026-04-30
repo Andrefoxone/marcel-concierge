@@ -1,4 +1,4 @@
-import { streamText, convertToModelMessages } from 'ai';
+import { streamText } from 'ai';
 
 const SYSTEM_PROMPT = `Sei Marcel, il concierge AI virtuale di un hotel boutique di lusso a Milano.
 
@@ -54,10 +54,34 @@ export async function POST(req: Request) {
     const result = streamText({
       model: 'openai/gpt-4o-mini',
       system: SYSTEM_PROMPT,
-      messages: await convertToModelMessages(messages),
+      messages: messages.map((m: { role: string; content: string }) => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      })),
     });
 
-    return result.toUIMessageStreamResponse();
+    // Use simple text streaming
+    const stream = result.textStream;
+    
+    const encoder = new TextEncoder();
+    const readableStream = new ReadableStream({
+      async start(controller) {
+        for await (const chunk of stream) {
+          const data = JSON.stringify({ type: 'text-delta', delta: chunk });
+          controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+        }
+        controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+        controller.close();
+      },
+    });
+
+    return new Response(readableStream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
+    });
   } catch (error) {
     console.error('Chat API error:', error);
     return new Response(JSON.stringify({ error: 'Failed to process chat' }), {
