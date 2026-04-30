@@ -22,7 +22,9 @@ export default function Home() {
   }, [messages, streaming]);
 
   async function send(text: string) {
+    console.log('[v0] send() called with:', text, 'loading:', loading);
     if (!text.trim() || loading) return;
+    console.log('[v0] Starting fetch...');
     
     const userMsg: Message = { id: String(Date.now()), role: 'user', text };
     setMessages(m => [...m, userMsg]);
@@ -140,7 +142,8 @@ export default function Home() {
               ].map((item, i) => (
                 <button
                   key={i}
-                  onClick={() => send(item.q)}
+                  type="button"
+                  onClick={() => { console.log('[v0] Button clicked:', item.label); send(item.q); }}
                   disabled={loading}
                   style={{
                     padding: '6px 12px',
