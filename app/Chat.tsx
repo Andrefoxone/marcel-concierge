@@ -22,6 +22,7 @@ export default function Chat() {
   }, [messages, streaming]);
 
   async function send(text: string) {
+    alert('Send called with: ' + text);
     if (!text.trim() || loading) return;
     
     const userMsg: Message = { id: String(Date.now()), role: 'user', text };
@@ -88,7 +89,7 @@ export default function Chat() {
             <button
               key={i}
               type="button"
-              onClick={() => send(label === 'Check-in' ? 'A che ora è il check-in?' : label === 'Ristorante' ? 'Mi consiglia un ristorante?' : 'Quali trattamenti spa avete?')}
+              onClick={() => { alert('Button clicked: ' + label); send(label === 'Check-in' ? 'A che ora è il check-in?' : label === 'Ristorante' ? 'Mi consiglia un ristorante?' : 'Quali trattamenti spa avete?'); }}
               disabled={loading}
               style={{
                 padding: '6px 12px',
