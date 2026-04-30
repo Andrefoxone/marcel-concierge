@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
 
 /* ─── DEMO CHAT DATA ─── */
 const DEMO_CONVERSATIONS = {
@@ -78,31 +76,107 @@ const PRICING = [
 
 /* ─── COMPONENTS ─── */
 
+// AI Response Generator - simulates intelligent concierge responses
+const generateMarcelResponse = (userMessage) => {
+  const msg = userMessage.toLowerCase();
+  
+  // Check-in related
+  if (msg.includes("check-in") || msg.includes("check in") || msg.includes("arrivare") || msg.includes("arrivo")) {
+    return "Il check-in e disponibile dalle 14:00 alle 22:00. Se desidera un orario anticipato, posso verificare la disponibilita per un early check-in alle 12:00 con un piccolo supplemento di 25 euro. Vuole che lo prenoti per lei?";
+  }
+  
+  // Check-out related
+  if (msg.includes("check-out") || msg.includes("check out") || msg.includes("partenza") || msg.includes("lasciare")) {
+    return "Il check-out standard e entro le 11:00. Se preferisce un late check-out, posso verificare la disponibilita fino alle 14:00 (30 euro) o fino alle 18:00 (60 euro). Vuole che controlli per la sua data di partenza?";
+  }
+  
+  // Restaurant related
+  if (msg.includes("ristorante") || msg.includes("cena") || msg.includes("pranzo") || msg.includes("mangiare") || msg.includes("consiglia")) {
+    return "Con piacere! Per una cena speciale le consiglio tre opzioni vicine all'hotel:\n\n• Terrazza Gallia — rooftop con vista Duomo, cucina stellata, 5 min a piedi\n• Seta by Mandarin — elegante, menu degustazione, 8 min\n• Langosteria — pesce eccellente, atmosfera intima, 10 min\n\nVuole che prenoti un tavolo? Per quante persone e a che ora?";
+  }
+  
+  // Spa related
+  if (msg.includes("spa") || msg.includes("massaggio") || msg.includes("relax") || msg.includes("benessere")) {
+    return "La nostra spa e aperta oggi dalle 10:00 alle 21:00. Ecco i trattamenti disponibili:\n\n• Massaggio rilassante 50min — 95 euro\n• Deep tissue 50min — 110 euro\n• Ritual corpo completo 80min — 145 euro\n\nAbbiamo disponibilita alle 15:00, 16:30 e 18:00. Quale orario preferisce?";
+  }
+  
+  // Transfer/taxi related
+  if (msg.includes("taxi") || msg.includes("transfer") || msg.includes("aeroporto") || msg.includes("stazione")) {
+    return "Posso organizzare un transfer privato per lei:\n\n• Aeroporto Malpensa — 85 euro (circa 50 min)\n• Aeroporto Linate — 45 euro (circa 20 min)\n• Stazione Centrale — 25 euro (circa 10 min)\n\nA che ora desidera partire? Posso prenotarlo subito.";
+  }
+  
+  // Breakfast related
+  if (msg.includes("colazione") || msg.includes("breakfast")) {
+    return "La colazione e servita dalle 7:00 alle 10:30 nel nostro ristorante al piano terra. Offriamo un buffet continentale con prodotti freschi e locali. Se preferisce, possiamo servirla in camera con un supplemento di 12 euro. Desidera prenotare la colazione in camera per domani?";
+  }
+  
+  // WiFi related
+  if (msg.includes("wifi") || msg.includes("internet") || msg.includes("connessione")) {
+    return "Il WiFi e gratuito in tutto l'hotel. La password per la sua camera e disponibile sul cartoncino nel comodino. Se ha problemi di connessione, mi faccia sapere e inviero subito l'assistenza tecnica.";
+  }
+  
+  // Room service
+  if (msg.includes("room service") || msg.includes("camera") && msg.includes("mangiare")) {
+    return "Il room service e disponibile 24 ore su 24. Le invio il menu digitale? I piatti piu richiesti sono il club sandwich, la Caesar salad e la nostra pasta fresca del giorno.";
+  }
+  
+  // Attractions/things to do
+  if (msg.includes("cosa fare") || msg.includes("visitare") || msg.includes("vedere") || msg.includes("attrazioni")) {
+    return "Milano offre tantissimo! Le consiglio:\n\n• Duomo e Terrazza (5 min a piedi)\n• Galleria Vittorio Emanuele II (7 min)\n• Teatro alla Scala (10 min)\n• Pinacoteca di Brera (15 min)\n• Navigli per aperitivo serale (12 min in taxi)\n\nVuole che prenoti biglietti o un tour guidato?";
+  }
+  
+  // Greeting
+  if (msg.includes("ciao") || msg.includes("buongiorno") || msg.includes("buonasera") || msg.includes("salve")) {
+    return "Buongiorno! Benvenuto. Come posso assisterla oggi? Sono qui per aiutarla con prenotazioni, informazioni sull'hotel, consigli su ristoranti e attrazioni, o qualsiasi altra necessita.";
+  }
+  
+  // Thank you
+  if (msg.includes("grazie") || msg.includes("perfetto") || msg.includes("ottimo")) {
+    return "E un piacere! Se ha altre domande o necessita durante il suo soggiorno, sono sempre qui per lei. Le auguro una splendida giornata!";
+  }
+  
+  // Price/cost related
+  if (msg.includes("quanto costa") || msg.includes("prezzo") || msg.includes("costo")) {
+    return "Posso aiutarla con informazioni sui prezzi. A quale servizio e interessato? Check-in anticipato, late check-out, spa, transfer, o altro?";
+  }
+  
+  // Default response
+  return "Grazie per la sua domanda. Posso aiutarla con:\n\n• Check-in e check-out\n• Prenotazioni ristoranti\n• Trattamenti spa\n• Transfer e taxi\n• Consigli su attrazioni e shopping\n• Room service\n\nMi dica pure come posso assisterla!";
+};
+
 function ChatDemo() {
   const [input, setInput] = useState("");
+  const [messages, setMessages] = useState([
+    {
+      id: "welcome",
+      role: "assistant",
+      text: "Buonasera e benvenuto! Sono Marcel, il vostro concierge virtuale. Come posso assisterla oggi? Posso aiutarla con check-in, prenotazioni ristoranti, spa, transfer o qualsiasi altra necessita.",
+    },
+  ]);
+  const [isTyping, setIsTyping] = useState(false);
   const chatRef = useRef(null);
-  
-  const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({ api: "/api/chat" }),
-    initialMessages: [
-      {
-        id: "welcome",
-        role: "assistant",
-        content: "Buonasera e benvenuto! Sono Marcel, il vostro concierge virtuale. Come posso assisterla oggi? Posso aiutarla con check-in, prenotazioni ristoranti, spa, transfer o qualsiasi altra necessita.",
-      },
-    ],
-  });
-
-  const isStreaming = status === "streaming" || status === "submitted";
 
   useEffect(() => {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
-  }, [messages, isStreaming]);
+  }, [messages, isTyping]);
 
-  const handleSend = () => {
-    if (!input.trim() || isStreaming) return;
-    sendMessage({ text: input });
+  const handleSend = (text) => {
+    const messageText = text || input;
+    if (!messageText.trim() || isTyping) return;
+    
+    // Add user message
+    const userMsg = { id: Date.now().toString(), role: "user", text: messageText };
+    setMessages(prev => [...prev, userMsg]);
     setInput("");
+    setIsTyping(true);
+    
+    // Simulate AI thinking and typing
+    setTimeout(() => {
+      const response = generateMarcelResponse(messageText);
+      const assistantMsg = { id: (Date.now() + 1).toString(), role: "assistant", text: response };
+      setMessages(prev => [...prev, assistantMsg]);
+      setIsTyping(false);
+    }, 1000 + Math.random() * 1000); // 1-2 second delay
   };
 
   const handleKeyDown = (e) => {
@@ -110,17 +184,6 @@ function ChatDemo() {
       e.preventDefault();
       handleSend();
     }
-  };
-
-  // Helper to extract text from message parts
-  const getMessageText = (msg) => {
-    if (msg.parts && Array.isArray(msg.parts)) {
-      return msg.parts
-        .filter((p) => p.type === "text")
-        .map((p) => p.text)
-        .join("");
-    }
-    return msg.content || "";
   };
 
   const suggestedQuestions = [
@@ -137,8 +200,8 @@ function ChatDemo() {
         <div>
           <div style={{ fontSize: 14, fontWeight: 700, color: "#f0e6d6", fontFamily: "'Cormorant Garamond',Georgia,serif" }}>Marcel</div>
           <div style={{ fontSize: 11, color: "#7a7268", display: "flex", alignItems: "center", gap: 4 }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: isStreaming ? "#f59e0b" : "#4caf50", display: "inline-block", animation: isStreaming ? "dotPulse .8s ease infinite" : "none" }}></span> 
-            {isStreaming ? "Marcel sta scrivendo..." : "Online — Boutique Hotel Demo"}
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: isTyping ? "#f59e0b" : "#4caf50", display: "inline-block", animation: isTyping ? "dotPulse .8s ease infinite" : "none" }}></span> 
+            {isTyping ? "Marcel sta scrivendo..." : "Online — Boutique Hotel Demo"}
           </div>
         </div>
       </div>
@@ -149,13 +212,8 @@ function ChatDemo() {
           {suggestedQuestions.map((q, i) => (
             <button
               key={i}
-              onClick={() => {
-                setInput(q);
-                setTimeout(() => {
-                  sendMessage({ text: q });
-                  setInput("");
-                }, 100);
-              }}
+              onClick={() => handleSend(q)}
+              disabled={isTyping}
               style={{
                 padding: "6px 12px",
                 borderRadius: 20,
@@ -164,12 +222,13 @@ function ChatDemo() {
                 color: "#c9a96e",
                 fontSize: 11,
                 fontWeight: 600,
-                cursor: "pointer",
+                cursor: isTyping ? "default" : "pointer",
                 fontFamily: "'DM Sans',sans-serif",
                 transition: "all .2s",
+                opacity: isTyping ? 0.5 : 1,
               }}
               onMouseEnter={(e) => {
-                e.target.style.background = "rgba(212,175,120,0.2)";
+                if (!isTyping) e.target.style.background = "rgba(212,175,120,0.2)";
               }}
               onMouseLeave={(e) => {
                 e.target.style.background = "rgba(212,175,120,0.1)";
@@ -183,12 +242,11 @@ function ChatDemo() {
 
       {/* Messages */}
       <div ref={chatRef} style={{ padding: "16px", height: 320, overflowY: "auto", display: "flex", flexDirection: "column", gap: 10 }}>
-        {messages.map((msg, i) => {
-          const text = getMessageText(msg);
+        {messages.map((msg) => {
           const isUser = msg.role === "user";
           
           return (
-            <div key={msg.id || i} style={{
+            <div key={msg.id} style={{
               alignSelf: isUser ? "flex-end" : "flex-start",
               maxWidth: "85%", animation: "msgIn .35s ease",
             }}>
@@ -198,11 +256,11 @@ function ChatDemo() {
                 background: isUser ? "linear-gradient(135deg, #d4af78, #b8924a)" : "rgba(255,255,255,0.06)",
                 color: isUser ? "#1a1a1a" : "#e0d8c8",
                 fontSize: 13, lineHeight: 1.55, fontFamily: "'DM Sans',sans-serif", whiteSpace: "pre-line"
-              }}>{text}</div>
+              }}>{msg.text}</div>
             </div>
           );
         })}
-        {isStreaming && messages[messages.length - 1]?.role === "user" && (
+        {isTyping && (
           <div style={{ alignSelf: "flex-start", animation: "msgIn .2s ease" }}>
             <div style={{ padding: "10px 18px", borderRadius: "16px 16px 16px 4px", background: "rgba(255,255,255,0.06)", display: "flex", gap: 4 }}>
               {[0,1,2].map(i => <span key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: "#c9a96e", animation: `dotPulse .8s ease ${i * 0.15}s infinite` }}></span>)}
@@ -220,7 +278,7 @@ function ChatDemo() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Scrivi un messaggio..."
-            disabled={isStreaming}
+            disabled={isTyping}
             style={{
               flex: 1,
               fontSize: 13,
@@ -232,24 +290,24 @@ function ChatDemo() {
             }}
           />
           <button
-            onClick={handleSend}
-            disabled={isStreaming || !input.trim()}
+            onClick={() => handleSend()}
+            disabled={isTyping || !input.trim()}
             style={{
               width: 36,
               height: 36,
               borderRadius: 8,
-              background: input.trim() && !isStreaming ? "linear-gradient(135deg, #d4af78, #b8924a)" : "rgba(255,255,255,0.05)",
+              background: input.trim() && !isTyping ? "linear-gradient(135deg, #d4af78, #b8924a)" : "rgba(255,255,255,0.05)",
               border: "none",
-              cursor: input.trim() && !isStreaming ? "pointer" : "default",
+              cursor: input.trim() && !isTyping ? "pointer" : "default",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontSize: 16,
-              color: input.trim() && !isStreaming ? "#1a1a1a" : "#5a5a4a",
+              color: input.trim() && !isTyping ? "#1a1a1a" : "#5a5a4a",
               transition: "all .2s",
             }}
           >
-            {isStreaming ? "..." : "↗"}
+            {isTyping ? "..." : "↗"}
           </button>
         </div>
       </div>
