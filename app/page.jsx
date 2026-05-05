@@ -177,6 +177,7 @@ function Stat({ value, label }) {
 //  MAIN COMPONENT
 // ════════════════════════════════════════
 export default function MarcelConcierge() {
+  const [mounted, setMounted] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
   const [messages, setMessages] = useState([
     { text: "Buongiorno. Sono Marcel, il suo concierge personale. Come posso assisterla oggi?", isUser: false, isNew: false },
@@ -187,8 +188,17 @@ export default function MarcelConcierge() {
   const chatEndRef = useRef(null)
 
   useEffect(() => {
+    setMounted(true)
+    console.log('[v0] Component mounted')
+  }, [])
+
+  useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages, typing])
+  
+  if (!mounted) {
+    return <div style={{ backgroundColor: "#0B0A0F", minHeight: "100vh" }} />
+  }
 
   const handleSend = async (customMessage) => {
     const userMsg = (customMessage || input).trim()
@@ -736,7 +746,7 @@ export default function MarcelConcierge() {
 
       {/* ═══════════════════════════════════
            CHAT PANEL
-         ═══════════════════════════════════ */}
+         ══════════════════════════════���════ */}
       {chatOpen && (
         <div
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:justify-end p-0 sm:p-6"
