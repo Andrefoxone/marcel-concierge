@@ -35,11 +35,29 @@ export default function DemoRequest() {
     e.preventDefault()
     setLoading(true)
     
-    // Simulate API call - in production this would send to a real endpoint
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    setLoading(false)
-    setSubmitted(true)
+    try {
+      const response = await fetch('/api/demo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hotelName: formData.hotelName,
+          contactName: formData.contactName,
+          email: formData.email,
+          phone: formData.phone,
+          roomsCount: formData.rooms,
+          message: formData.message,
+        }),
+      })
+      
+      if (!response.ok) throw new Error('API Error')
+      
+      setSubmitted(true)
+    } catch (error) {
+      console.error('Error submitting form:', error)
+      alert('Si e verificato un errore. Riprovi tra poco.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleChange = (e) => {
