@@ -307,7 +307,7 @@ export default function MarcelConcierge() {
                 border: "none",
                 cursor: "pointer",
               }}
-              onClick={() => setChatOpen(true)}
+              onClick={() => { console.log('[v0] Parla con Marcel clicked'); setChatOpen(true); }}
             >
               Parla con Marcel
             </button>
@@ -414,7 +414,7 @@ export default function MarcelConcierge() {
                 border: "none",
                 cursor: "pointer",
               }}
-              onClick={() => setChatOpen(true)}
+              onClick={() => { console.log('[v0] Inizia ora clicked'); setChatOpen(true); }}
             >
               Inizia ora
               <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
@@ -877,7 +877,7 @@ export default function MarcelConcierge() {
       {/* ─── FLOATING CHAT BUTTON ─── */}
       {!chatOpen && (
         <button
-          onClick={() => setChatOpen(true)}
+          onClick={() => { console.log('[v0] Floating button clicked'); setChatOpen(true); }}
           className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-105"
           style={{
             background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
