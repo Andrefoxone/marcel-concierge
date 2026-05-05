@@ -419,8 +419,9 @@ export default function MarcelConcierge() {
               Inizia ora
               <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
             </button>
-            <button
-              className="px-8 py-3.5 rounded-full transition-all duration-300"
+            <a
+              href="/demo"
+              className="px-8 py-3.5 rounded-full transition-all duration-300 inline-block text-center"
               style={{
                 backgroundColor: "transparent",
                 border: `1px solid ${C.goldDark}`,
@@ -429,10 +430,11 @@ export default function MarcelConcierge() {
                 fontSize: 14,
                 fontWeight: 500,
                 cursor: "pointer",
+                textDecoration: "none",
               }}
             >
-              Scopri di più
-            </button>
+              Richiedi Demo
+            </a>
           </div>
         </div>
 
@@ -621,8 +623,9 @@ export default function MarcelConcierge() {
                     </div>
                   ))}
                 </div>
-                <button
-                  className="w-full py-3 rounded-full transition-all duration-300"
+                <a
+                  href={plan.price === "Su misura" ? "/demo" : "#"}
+                  className="w-full py-3 rounded-full transition-all duration-300 block text-center"
                   style={{
                     background: plan.featured ? `linear-gradient(135deg, ${C.gold}, ${C.goldDark})` : "transparent",
                     color: plan.featured ? C.bg : C.gold,
@@ -631,10 +634,11 @@ export default function MarcelConcierge() {
                     fontSize: 13,
                     fontWeight: 600,
                     cursor: "pointer",
+                    textDecoration: "none",
                   }}
                 >
                   {plan.price === "Su misura" ? "Contattaci" : "Scegli " + plan.name}
-                </button>
+                </a>
               </div>
             ))}
           </div>
@@ -675,19 +679,58 @@ export default function MarcelConcierge() {
 
       {/* ─── FOOTER ─── */}
       <footer className="py-12 px-6" style={{ borderTop: `1px solid ${C.border}` }}>
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2">
-            <div
-              className="w-6 h-6 rounded-full flex items-center justify-center"
-              style={{ background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})` }}
-            >
-              <span style={{ fontFamily: serif, fontSize: 12, color: C.bg, fontWeight: 700 }}>M</span>
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-8 mb-8">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div
+                  className="w-6 h-6 rounded-full flex items-center justify-center"
+                  style={{ background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})` }}
+                >
+                  <span style={{ fontFamily: serif, fontSize: 12, color: C.bg, fontWeight: 700 }}>M</span>
+                </div>
+                <span style={{ fontFamily: serif, fontSize: 16, color: C.cream }}>Marcel Concierge</span>
+              </div>
+              <p style={{ fontFamily: sans, fontSize: 13, color: C.muted, maxWidth: 280 }}>
+                Il concierge AI che trasforma ogni desiderio in realta.
+              </p>
             </div>
-            <span style={{ fontFamily: serif, fontSize: 16, color: C.cream }}>Marcel Concierge</span>
+            <div className="flex gap-12">
+              <div>
+                <p style={{ fontFamily: sans, fontSize: 12, color: C.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>
+                  Link
+                </p>
+                <div className="flex flex-col gap-2">
+                  <a href="#" style={{ fontFamily: sans, fontSize: 13, color: C.creamMuted, textDecoration: "none" }}>Servizi</a>
+                  <a href="#" style={{ fontFamily: sans, fontSize: 13, color: C.creamMuted, textDecoration: "none" }}>Pricing</a>
+                  <a href="/demo" style={{ fontFamily: sans, fontSize: 13, color: C.creamMuted, textDecoration: "none" }}>Richiedi Demo</a>
+                </div>
+              </div>
+              <div>
+                <p style={{ fontFamily: sans, fontSize: 12, color: C.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>
+                  Legale
+                </p>
+                <div className="flex flex-col gap-2">
+                  <a href="/privacy" style={{ fontFamily: sans, fontSize: 13, color: C.creamMuted, textDecoration: "none" }}>Privacy Policy</a>
+                  <a href="/terms" style={{ fontFamily: sans, fontSize: 13, color: C.creamMuted, textDecoration: "none" }}>Termini di Servizio</a>
+                </div>
+              </div>
+              <div>
+                <p style={{ fontFamily: sans, fontSize: 12, color: C.gold, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>
+                  Contatti
+                </p>
+                <div className="flex flex-col gap-2">
+                  <span style={{ fontFamily: sans, fontSize: 13, color: C.creamMuted }}>info@marcelconcierge.com</span>
+                  <span style={{ fontFamily: sans, fontSize: 13, color: C.creamMuted }}>+39 02 1234567</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <p style={{ fontFamily: sans, fontSize: 12, color: C.muted }}>
-            © 2026 Marcel Concierge. Tutti i diritti riservati.
-          </p>
+          <div className="pt-6" style={{ borderTop: `1px solid ${C.border}` }}>
+            <p style={{ fontFamily: sans, fontSize: 12, color: C.muted, textAlign: "center" }}>
+              © 2026 Marcel Concierge S.r.l. - P.IVA 00000000000 - Tutti i diritti riservati.
+            </p>
+          </div>
         </div>
       </footer>
 
