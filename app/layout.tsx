@@ -1,16 +1,4 @@
 import type { Metadata } from 'next'
-import { Playfair_Display, Inter } from 'next/font/google'
-import './globals.css'
-
-const playfair = Playfair_Display({ 
-  subsets: ['latin'],
-  variable: '--font-serif'
-})
-
-const inter = Inter({ 
-  subsets: ['latin'],
-  variable: '--font-sans'
-})
 
 export const metadata: Metadata = {
   title: 'Marcel Concierge | Il Tuo Concierge AI di Lusso',
@@ -23,7 +11,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="it" className={`${playfair.variable} ${inter.variable}`}>
+    <html lang="it">
       <body>{children}</body>
     </html>
   )
