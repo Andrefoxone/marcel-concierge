@@ -12,10 +12,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="it" className="bg-[#0f0f0f]">
+    <html lang="it" style={{ backgroundColor: '#0f0f0f' }}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body style={{ margin: 0, fontFamily: "'DM Sans', sans-serif" }}>{children}</body>
