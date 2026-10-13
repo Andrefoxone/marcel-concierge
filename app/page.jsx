@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Send, Sparkles, Clock, Globe, Shield, ChevronDown, Menu, X, ArrowRight, Star, MapPin, Plane, UtensilsCrossed, Hotel, Gem } from "lucide-react"
+import { Send, Sparkles, Clock, Globe, Shield, ChevronDown, Menu, X, ArrowRight, Star, MapPin, Plane, Car, KeyRound } from "lucide-react"
 
 const FONT_LINK = "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap"
 
@@ -179,7 +179,7 @@ function Stat({ value, label }) {
 export default function MarcelConcierge() {
   const [chatOpen, setChatOpen] = useState(false)
   const [messages, setMessages] = useState([
-    { text: "Buongiorno. Sono Marcel, il suo concierge personale. Come posso assisterla oggi?", isUser: false, isNew: false },
+    { text: "Buongiorno. Sono Marcel, il suo concierge per il noleggio auto. Che viaggio ha in programma?", isUser: false, isNew: false },
   ])
   const [input, setInput] = useState("")
   const [typing, setTyping] = useState(false)
@@ -358,7 +358,7 @@ export default function MarcelConcierge() {
           >
             <Sparkles size={12} style={{ color: C.gold }} />
             <span style={{ fontFamily: sans, fontSize: 11, color: C.gold, letterSpacing: 2, textTransform: "uppercase" }}>
-              AI-Powered Luxury Concierge
+              AI Concierge · Noleggio Auto
             </span>
           </div>
 
@@ -374,7 +374,7 @@ export default function MarcelConcierge() {
               opacity: 0,
             }}
           >
-            Il suo mondo,{" "}
+            La sua auto,{" "}
             <span
               style={{
                 background: `linear-gradient(90deg, ${C.gold}, ${C.goldLight}, ${C.gold})`,
@@ -385,7 +385,7 @@ export default function MarcelConcierge() {
                 fontStyle: "italic",
               }}
             >
-              orchestrato
+              pronta
             </span>
           </h1>
 
@@ -400,7 +400,7 @@ export default function MarcelConcierge() {
               opacity: 0,
             }}
           >
-            Marcel è il concierge che anticipa ogni desiderio. Viaggi, ristoranti, esperienze esclusive — tutto curato con l'intelligenza artificiale e il tocco umano.
+            Marcel è il concierge AI del noleggio auto: sceglie con lei il veicolo giusto, chiarisce prezzi e coperture e organizza la consegna. In chat, 24 ore su 24.
           </p>
 
           <div
@@ -451,8 +451,8 @@ export default function MarcelConcierge() {
           }}
         >
           <Stat value="24/7" label="Disponibilità" />
-          <Stat value="12k+" label="Richieste gestite" />
-          <Stat value="98%" label="Soddisfazione" />
+          <Stat value="5s" label="Tempo di risposta" />
+          <Stat value="30+" label="Lingue parlate" />
         </div>
       </section>
 
@@ -464,16 +464,16 @@ export default function MarcelConcierge() {
               Servizi
             </p>
             <h2 style={{ fontFamily: serif, fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 300, color: C.cream }}>
-              Ogni desiderio, una soluzione
+              Ogni viaggio, l&apos;auto giusta
             </h2>
           </div>
           <div className="grid md:grid-cols-3 gap-5">
-            <ServiceCard icon={Plane} title="Travel Design" description="Itinerari su misura, voli privati, trasferimenti esclusivi. Ogni viaggio diventa un'esperienza irripetibile." delay={0.1} />
-            <ServiceCard icon={UtensilsCrossed} title="Fine Dining" description="Prenotazioni nei ristoranti più esclusivi. Accesso prioritario, menu personalizzati, chef privati." delay={0.2} />
-            <ServiceCard icon={Hotel} title="Hospitality" description="Le suite migliori, upgrade garantiti, welcome amenities. Il lusso che si adatta a lei." delay={0.3} />
-            <ServiceCard icon={Gem} title="Lifestyle" description="Shopping privato, eventi esclusivi, wellness premium. Ogni momento della giornata, curato." delay={0.4} />
-            <ServiceCard icon={Globe} title="Global Access" description="Una rete mondiale di contatti e partner. Ovunque lei sia, Marcel è già lì." delay={0.5} />
-            <ServiceCard icon={Shield} title="Privacy Totale" description="Discrezione assoluta. I suoi dati protetti con crittografia end-to-end e protocolli riservati." delay={0.6} />
+            <ServiceCard icon={Car} title="Flotta Selezionata" description="Dalla city car alla berlina di lusso. Marcel le consiglia il veicolo perfetto per persone, bagagli e percorso." delay={0.1} />
+            <ServiceCard icon={KeyRound} title="Prenotazione Rapida" description="Disponibilità, preventivo e richiesta di prenotazione direttamente in chat, a qualsiasi ora." delay={0.2} />
+            <ServiceCard icon={Plane} title="Consegna Ovunque" description="L'auto la aspetta in aeroporto, in stazione o in hotel. Nessuna fila al bancone." delay={0.3} />
+            <ServiceCard icon={MapPin} title="Consigli di Viaggio" description="Percorsi, ZTL, parcheggi e soste consigliate per guidare sereni anche in una città nuova." delay={0.4} />
+            <ServiceCard icon={Globe} title="Multilingue" description="Risponde in italiano, inglese e in decine di altre lingue ai clienti di tutto il mondo." delay={0.5} />
+            <ServiceCard icon={Shield} title="Coperture Chiare" description="Assicurazioni, franchigie e deposito spiegati in modo semplice. Nessuna sorpresa al ritiro." delay={0.6} />
           </div>
         </div>
       </section>
@@ -486,14 +486,14 @@ export default function MarcelConcierge() {
               Come funziona
             </p>
             <h2 style={{ fontFamily: serif, fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 300, color: C.cream }}>
-              Tre passi. Nessun limite.
+              Tre passi. Poi solo strada.
             </h2>
           </div>
           <div className="grid md:grid-cols-3 gap-10">
             {[
-              { n: "01", title: "Parli con Marcel", desc: "Scriva ciò che desidera in chat. In qualsiasi lingua, a qualsiasi ora." },
-              { n: "02", title: "Marcel orchestra", desc: "La nostra AI analizza, seleziona e coordina le migliori opzioni in tempo reale." },
-              { n: "03", title: "Lei vive", desc: "Riceve proposte curate, conferme istantanee e un'esperienza senza pensieri." },
+              { n: "01", title: "Racconti il viaggio", desc: "Date, luogo di ritiro, numero di persone. In qualsiasi lingua, a qualsiasi ora." },
+              { n: "02", title: "Marcel sceglie", desc: "Le propone le auto adatte con prezzo totale, coperture e condizioni chiare." },
+              { n: "03", title: "Si mette al volante", desc: "Conferma la richiesta e trova l'auto pronta dove e quando le serve." },
             ].map((step) => (
               <div key={step.n} className="text-center">
                 <p style={{ fontFamily: serif, fontSize: 48, fontWeight: 300, color: `${C.gold}30`, marginBottom: 16 }}>
@@ -524,17 +524,17 @@ export default function MarcelConcierge() {
           </div>
           <div className="grid md:grid-cols-3 gap-5">
             <Testimonial
-              quote="Marcel mi ha trovato un tavolo da Mirazur in 20 minuti. Era tutto esaurito da mesi. Non chiedo come fa, apprezzo che lo faccia."
+              quote="Atterrata a Malpensa alle 23, l'auto era lì ad aspettarmi. Ho prenotato tutto in chat la sera prima, in cinque minuti."
               author="Giulia V."
               role="Imprenditrice, Milano"
             />
             <Testimonial
-              quote="Ho delegato l'intero viaggio a Tokyo. Volo, hotel, ristoranti, autista. Perfetto in ogni dettaglio. Non potrei più farne a meno."
+              quote="Cinque persone, quattro valigie e un weekend in Toscana. Marcel mi ha consigliato il van giusto e spiegato le ZTL da evitare."
               author="Marco R."
               role="CEO, Roma"
             />
             <Testimonial
-              quote="La discrezione è ciò che mi ha conquistato. Marcel gestisce tutto senza che io debba spiegare nulla due volte."
+              quote="Finalmente qualcuno che spiega franchigia e deposito senza giri di parole. Al ritiro nessuna sorpresa."
               author="Alessandra D."
               role="Avvocato, Torino"
             />
@@ -550,30 +550,30 @@ export default function MarcelConcierge() {
               Piani
             </p>
             <h2 style={{ fontFamily: serif, fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 300, color: C.cream }}>
-              Scelga il suo livello
+              Scelga la sua categoria
             </h2>
           </div>
           <div className="grid md:grid-cols-3 gap-5">
             {[
               {
-                name: "Classique",
-                price: "49",
-                desc: "Per chi inizia a delegare",
-                features: ["10 richieste / mese", "Risposta entro 2h", "Prenotazioni ristoranti", "Supporto via chat"],
+                name: "City",
+                price: "39",
+                desc: "Compatte, agili, perfette in città",
+                features: ["Fiat 500 o simili", "Cambio manuale", "200 km / giorno inclusi", "Assicurazione base"],
                 featured: false,
               },
               {
-                name: "Privilège",
-                price: "149",
+                name: "Comfort",
+                price: "69",
                 desc: "Il preferito dai nostri clienti",
-                features: ["Richieste illimitate", "Risposta istantanea", "Travel design completo", "Concierge dedicato", "Accesso eventi esclusivi"],
+                features: ["SUV o station wagon", "Cambio automatico", "Km illimitati", "Copertura danni ridotta", "Secondo guidatore gratis"],
                 featured: true,
               },
               {
-                name: "Maison",
+                name: "Luxury",
                 price: "Su misura",
-                desc: "Per esigenze uniche",
-                features: ["Tutto di Privilège", "Risposta immediata 24/7", "Rete partner globale", "Account manager privato", "Servizi su misura"],
+                desc: "Per occasioni speciali",
+                features: ["Berline e sportive premium", "Consegna a domicilio", "Copertura totale", "Autista su richiesta", "Assistenza dedicata"],
                 featured: false,
               },
             ].map((plan) => (
@@ -614,7 +614,7 @@ export default function MarcelConcierge() {
                     {plan.price}
                   </span>
                   {plan.price !== "Su misura" && (
-                    <span style={{ fontFamily: sans, fontSize: 13, color: C.muted }}>/mese</span>
+                    <span style={{ fontFamily: sans, fontSize: 13, color: C.muted }}>/giorno</span>
                   )}
                 </div>
                 <div className="flex flex-col gap-3 mb-8">
@@ -766,7 +766,7 @@ export default function MarcelConcierge() {
             {/* Quick actions */}
             {messages.length <= 1 && (
               <div className="px-5 pb-2 flex flex-wrap gap-2">
-                {["Prenota un ristorante", "Organizza un viaggio", "Evento esclusivo"].map((q) => (
+                {["Noleggia un'auto", "Prezzi e coperture", "Consegna in aeroporto"].map((q) => (
                   <button
                     key={q}
                     className="px-3 py-1.5 rounded-full transition-all duration-200"

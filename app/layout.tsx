@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Marcel Concierge | Il Tuo Concierge AI di Lusso',
-  description: 'Esperienza di ospitalita premium potenziata da intelligenza artificiale',
+  title: 'Marcel | Il concierge AI per il noleggio auto',
+  description: "Scegli l'auto giusta, scopri prezzi e coperture e prenota la consegna in chat, 24 ore su 24.",
 }
 
 export default function RootLayout({
