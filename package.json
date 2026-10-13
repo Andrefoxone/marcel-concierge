@@ -2,21 +2,25 @@
   "name": "marcel-concierge",
   "private": true,
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "npm run build && wrangler dev",
-    "deploy": "npm run build && wrangler deploy"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
-  },
-  "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.33.2",
-    "@vitejs/plugin-react": "^6.0.1",
-    "vite": "^8.0.10",
-    "wrangler": "^4.85.0"
+    "@ai-sdk/react": "^3.0.172",
+    "@neondatabase/serverless": "^1.1.0",
+    "@tailwindcss/postcss": "^4.2.4",
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "ai": "^6.0.170",
+    "autoprefixer": "^10.5.0",
+    "lucide-react": "^1.14.0",
+    "next": "^16.2.4",
+    "postcss": "^8.5.12",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwindcss": "^4.2.4",
+    "typescript": "^6.0.3"
   }
 }
