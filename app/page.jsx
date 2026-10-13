@@ -190,25 +190,55 @@ export default function MarcelConcierge() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages, typing])
 
-  const marcelReplies = [
-    "Certamente. Posso organizzare una prenotazione al ristorante per questa sera. Ha preferenze particolari?",
-    "Mi permetta di verificare le disponibilità. Le proporrò le migliori opzioni entro pochi istanti.",
-    "Eccellente scelta. Mi occupo immediatamente di tutti i dettagli per lei.",
-    "Con piacere. Conosco personalmente il maître — le garantirò il tavolo migliore.",
-    "Ho preso nota. Le invierò un riepilogo completo con conferma entro breve.",
-  ]
-
-  const handleSend = () => {
-    if (!input.trim()) return
-    const userMsg = input.trim()
+  const handleSend = async (preset) => {
+    const userMsg = (typeof preset === "string" ? preset : input).trim()
+    if (!userMsg || typing) return
     setInput("")
-    setMessages((prev) => [...prev, { text: userMsg, isUser: true, isNew: true }])
+    const history = [...messages, { text: userMsg, isUser: true, isNew: true }]
+    setMessages(history)
     setTyping(true)
-    setTimeout(() => {
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: history.map((m) => ({ role: m.isUser ? "user" : "assistant", content: m.text })),
+        }),
+      })
+      if (!response.ok || !response.body) throw new Error(`HTTP ${response.status}`)
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let fullText = ""
+      let started = false
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        fullText += decoder.decode(value, { stream: true })
+        if (!started) {
+          started = true
+          setTyping(false)
+          setMessages((prev) => [...prev, { text: fullText, isUser: false, isNew: true }])
+        } else {
+          setMessages((prev) => {
+            const updated = [...prev]
+            updated[updated.length - 1] = { ...updated[updated.length - 1], text: fullText }
+            return updated
+          })
+        }
+      }
+      if (!started) throw new Error("Empty response")
+    } catch (err) {
+      console.error("Chat error:", err)
+      setMessages((prev) => [
+        ...prev,
+        { text: "Mi scusi, si è verificato un problema. Riprovi tra un istante.", isUser: false, isNew: true },
+      ])
+    } finally {
       setTyping(false)
-      const reply = marcelReplies[Math.floor(Math.random() * marcelReplies.length)]
-      setMessages((prev) => [...prev, { text: reply, isUser: false, isNew: true }])
-    }, 1800)
+    }
   }
 
   return (
@@ -536,7 +566,7 @@ export default function MarcelConcierge() {
                 name: "Privilège",
                 price: "149",
                 desc: "Il preferito dai nostri clienti",
-                features: ["Richieste illimitate", "Risposta entro 30 min", "Travel design completo", "Concierge dedicato", "Accesso eventi esclusivi"],
+                features: ["Richieste illimitate", "Risposta istantanea", "Travel design completo", "Concierge dedicato", "Accesso eventi esclusivi"],
                 featured: true,
               },
               {
@@ -748,19 +778,7 @@ export default function MarcelConcierge() {
                       fontSize: 12,
                       cursor: "pointer",
                     }}
-                    onClick={() => {
-                      setInput(q)
-                      setTimeout(() => {
-                        setMessages((prev) => [...prev, { text: q, isUser: true, isNew: true }])
-                        setInput("")
-                        setTyping(true)
-                        setTimeout(() => {
-                          setTyping(false)
-                          const reply = marcelReplies[Math.floor(Math.random() * marcelReplies.length)]
-                          setMessages((prev) => [...prev, { text: reply, isUser: false, isNew: true }])
-                        }, 1800)
-                      }, 100)
-                    }}
+                    onClick={() => handleSend(q)}
                     onMouseEnter={(e) => {
                       e.target.style.borderColor = C.goldDark
                       e.target.style.color = C.gold
@@ -785,7 +803,11 @@ export default function MarcelConcierge() {
                 <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                  onKeyDown={(e) => {
+                    if (e.key !== "Enter" || e.nativeEvent.isComposing || e.keyCode === 229) return
+                    e.preventDefault()
+                    handleSend()
+                  }}
                   placeholder="Scriva qui la sua richiesta..."
                   className="flex-1 outline-none bg-transparent"
                   style={{
